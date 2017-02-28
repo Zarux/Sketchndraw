@@ -1,3 +1,3 @@
-const socket = io.connect("localhost:8000");
+const socket = io.connect("localhost:9001");
 
 export default socket;

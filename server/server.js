@@ -19,6 +19,18 @@ io.sockets.on('connection', function (socket) {
             socket.broadcast.to(room).emit('user-left', {
                 id: socket.id
             });
+            client.lrange(`sk:room:${room}:users`, 0, -1, (err, message) => {
+                client.del(`sk:room:${room}:users`);
+                message.forEach(x => {
+                    const obj = JSON.parse(x);
+                    const id = obj.i;
+                    if(socket.id !== id){
+                        client.rpush(`sk:room:${room}:users`, JSON.stringify(obj));
+                    }
+
+                });
+
+            });
 
             if(num_clients === 1){
                 console.log('Clearing data for room', room);
