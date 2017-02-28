@@ -4,13 +4,14 @@ const server = require('http').Server(app);
 const io = require('socket.io').listen(server);
 const redis = require("redis");
 const config = require("./config");
+const client = redis.createClient({
+    host: config.redisHost,
+    password: config.redisPassword
+});
 
+client.flushall();
 
 io.sockets.on('connection', function (socket) {
-    const client = redis.createClient({
-        host: config.redisHost,
-        password: config.redisPassword
-    });
 
     socket.on("disconnecting", ()=>{
         Object.keys(socket.rooms).forEach(room => {
