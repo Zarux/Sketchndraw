@@ -3,21 +3,25 @@ const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io').listen(server);
 const redis = require("redis");
+const config = require("./config");
 
 
 io.sockets.on('connection', function (socket) {
-    const client = redis.createClient({host: "82.196.13.68"});
-
+    const client = redis.createClient({
+        host: config.redisHost,
+        password: config.redisPassword
+    });
 
     socket.on("disconnecting", ()=>{
         Object.keys(socket.rooms).forEach(room => {
             const clients = io.sockets.adapter.rooms[room].sockets;
-            const num_clients = Object.keys(clients).length;
+            const num_clients = Object.keys(clients).length - 1;
             console.log(socket.nickname, "disconnecting from", room, "\n");
 
             socket.broadcast.to(room).emit('user-left', {
                 id: socket.id
             });
+
             client.lrange(`sk:room:${room}:users`, 0, -1, (err, message) => {
                 client.del(`sk:room:${room}:users`);
                 message.forEach(x => {
@@ -26,17 +30,14 @@ io.sockets.on('connection', function (socket) {
                     if(socket.id !== id){
                         client.rpush(`sk:room:${room}:users`, JSON.stringify(obj));
                     }
-
                 });
-
             });
 
-            if(num_clients === 1){
+            if(num_clients === 0){
                 console.log('Clearing data for room', room, "\n");
                 client.del(`sk:room:${room}:chat`);
                 client.del(`sk:room:${room}:users`);
             }
-
         });
     });
 
@@ -110,4 +111,6 @@ io.sockets.on('connection', function (socket) {
 });
 
 
-server.listen(9001);
+server.listen(config.serverPort, ()=>{
+    console.log("Server running on", config.serverPort)
+});
