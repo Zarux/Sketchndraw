@@ -1,3 +1,6 @@
-const socket = io.connect("localhost:9001");
+const port = 9001;
+const host = window.location.hostname;
+
+const socket = io.connect(`${host}:${port}`);
 
 export default socket;
