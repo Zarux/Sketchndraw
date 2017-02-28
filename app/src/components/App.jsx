@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {BrowserRouter as Router, Route} from 'react-router-dom';
-import BrowserHistory from 'react-router/lib/BrowserHistory';
+import { browserHistory } from 'react-router'
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import darkBaseTheme from 'material-ui/styles/baseThemes/darkBaseTheme';
@@ -25,7 +25,7 @@ export default class App extends Component{
     render() {
         return (
             <MuiThemeProvider muiTheme={theme}>
-                <Router history={BrowserHistory}>
+                <Router history={browserHistory}>
                     <div className="app">
                         <Route exact path="/" component={IndexPage}/>
                         <Route path="/room/:room" component={IndexPage}/>
