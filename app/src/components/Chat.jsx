@@ -7,7 +7,6 @@ import socket from '../socket'
 
 class ChatMessage extends Component{
 
-
     render(){
         const message = this.props.message;
         const user = this.props.user;
@@ -30,7 +29,7 @@ class GuessButton extends Component{
 
     render(){
         const style = {
-            margin: 12,
+            marginLeft: "8%",
         };
 
         return (
@@ -83,10 +82,10 @@ class GuessBox extends Component{
             <div>
                 <TextField
                     style={{
-                        marginLeft:"20px",
+                        marginLeft:"8%",
                         width:"210px",
                     }}
-                    hintText="Word here"
+                    /*hintText="Word here"*/
                     onChange={this.handleChange}
                     onKeyDown={this.handleKeyDown}
                     value={this.state.value}
@@ -110,7 +109,6 @@ export default class Chat extends Component {
         super(props);
         this.state = {};
         this.state.messages = [];
-
 
         socket.on("new-message", data => {
             this.addMessage(data);

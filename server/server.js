@@ -13,8 +13,7 @@ io.sockets.on('connection', function (socket) {
         Object.keys(socket.rooms).forEach(room => {
             const clients = io.sockets.adapter.rooms[room].sockets;
             const num_clients = Object.keys(clients).length;
-            console.log(socket.nickname, "disconnecting from", room);
-            console.log(room, "has", num_clients, "clients");
+            console.log(socket.nickname, "disconnecting from", room, "\n");
 
             socket.broadcast.to(room).emit('user-left', {
                 id: socket.id
@@ -33,7 +32,7 @@ io.sockets.on('connection', function (socket) {
             });
 
             if(num_clients === 1){
-                console.log('Clearing data for room', room);
+                console.log('Clearing data for room', room, "\n");
                 client.del(`sk:room:${room}:chat`);
                 client.del(`sk:room:${room}:users`);
             }
@@ -64,7 +63,7 @@ io.sockets.on('connection', function (socket) {
 
 
     socket.on("join-room", data => {
-        console.log(data.user, "joined room", data.room);
+        console.log(data.user, "joined room", data.room, "\n");
         socket.join(data.room);
         socket.nickname = data.user;
         const user = {

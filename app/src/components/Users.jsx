@@ -22,8 +22,8 @@ class User extends Component {
         return(
             <ListItem
                 primaryText={this.props.name}
-                secondaryText="Points: 0"
-                leftAvatar={avatar}
+                secondaryText={`Points: ${this.props.points}`}
+                leftIcon={avatar}
                 disabled={true}
             />
         )
@@ -86,6 +86,7 @@ export default class Users extends Component {
 
         return (
             <Paper style={style} zDepth={3}>
+                <h2 style={{textAlign:"center"}}>Users</h2>
                 <List children={this.mapUsers(this.state.users)} />
             </Paper>
         )
