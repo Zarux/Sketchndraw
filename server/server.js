@@ -119,7 +119,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on("get-rooms", data => {
-        const ret_data = {"test13":33, "test14":33};
+        const ret_data = {};
         const rooms = io.sockets.adapter.rooms;
         Object.keys(rooms).map(room => {
             if(room.length > 0 && room.length !== 20) {
