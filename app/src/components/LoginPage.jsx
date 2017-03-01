@@ -30,7 +30,18 @@ class RoomInfo extends Component{
 
 
     mapRooms(rooms){
-        return Object.keys(rooms).map((room_name, i) => {
+        const ret_data = [];
+        if(Object.keys(rooms).length === 0){
+            ret_data.push(
+                <ListItem
+                    key="no_rooms"
+                    primaryText={`No rooms in progress`}
+                    style={{color:"red"}}
+                />
+            );
+            return ret_data;
+        }
+        Object.keys(rooms).forEach((room_name, i) => {
             const num_clients = rooms[room_name];
             const iconStyle = {
                 width: 48,
@@ -38,28 +49,38 @@ class RoomInfo extends Component{
                 cursor: "pointer",
                 paddingBottom: "50px"
             };
-            if(!room_name.startsWith(this.state.search, 0)){
-                return (<span> </span>);
-            }
-            return (
-                <ListItem
-                    disabled={true}
-                    key={room_name+i}
-                    primaryText={room_name}
-                    secondaryText={`Users: ${num_clients}`}
-                    leftIcon={<LockOpen />}
-                    rightIcon={
+            if(room_name.startsWith(this.state.search, 0)) {
+                ret_data.push(
+                    <ListItem
+                        disabled={true}
+                        key={room_name + i}
+                        primaryText={room_name}
+                        secondaryText={`Users: ${num_clients}`}
+                        leftIcon={<LockOpen />}
+                        rightIcon={
                             <PlayArrow
-                                onClick={()=>{
+                                onClick={() => {
                                     localStorage.room = room_name;
                                     location.href = `/room/${room_name}`;
                                 }}
-                               style={iconStyle}
+                                style={iconStyle}
                             />
-                    }
+                        }
+                    />
+                )
+            }
+        });
+
+        if(ret_data.length === 0){
+            ret_data.push(
+                <ListItem
+                    key="not_found"
+                    primaryText={`No rooms matching '${this.state.search}' found`}
+                    style={{color:"red"}}
                 />
             )
-        })
+        }
+        return ret_data;
     }
 
     handleChange = (event) => {
@@ -123,7 +144,7 @@ class UserInfo extends Component{
         }
     }
 
-    handleClick = (event) => {
+    handleClick = () => {
         if(this.state.room === "" || this.state.name === ""){
             return
         }
