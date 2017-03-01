@@ -14,6 +14,7 @@ export default class IndexPage extends Component {
         }
         const username = localStorage.name;
         const room = localStorage.room;
+        this.state.shouldRender = false;
         if(!username){
             if(!room && this.state.room){
                 localStorage.setItem("room", this.state.room);
@@ -21,10 +22,19 @@ export default class IndexPage extends Component {
             this.state.shouldRender = false;
             location.href = "/";
         }else{
-            this.state.shouldRender = true;
             this.state.user = username;
             history.replaceState("", `Sketchndraw - ${this.state.room}`, `/room/${this.state.room}`);
-            socket.emit("join-room", {room: this.state.room, user: this.state.user});
+            socket.emit("join-room", {room: this.state.room, user: this.state.user, pass: localStorage.pass});
+            socket.on("join-room-failed", data => {
+               localStorage.setItem("error", JSON.stringify({pass: data.reason}));
+               localStorage.setItem("room", this.state.room);
+               localStorage.setItem("name", this.state.user);
+               location.href = "/";
+            });
+            socket.on("join-room-success", data=>{
+                this.state.shouldRender = true;
+                this.setState(this.state);
+            });
             localStorage.clear();
         }
     }

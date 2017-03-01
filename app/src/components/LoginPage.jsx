@@ -4,7 +4,7 @@ import Paper from 'material-ui/Paper';
 import RaisedButton from "material-ui/RaisedButton";
 import {List, ListItem} from 'material-ui/List';
 import LockOutline from 'material-ui/svg-icons/action/lock-outline'
-import LockOpen from 'material-ui/svg-icons/action/lock-open'
+import Public from 'material-ui/svg-icons/social/public'
 import PlayArrow from 'material-ui/svg-icons/av/play-arrow'
 import socket from '../socket';
 
@@ -34,6 +34,7 @@ class RoomInfo extends Component{
         if(Object.keys(rooms).length === 0){
             ret_data.push(
                 <ListItem
+                    disabled={true}
                     key="no_rooms"
                     primaryText={`No rooms in progress`}
                     style={{color:"red"}}
@@ -42,13 +43,18 @@ class RoomInfo extends Component{
             return ret_data;
         }
         Object.keys(rooms).forEach((room_name, i) => {
-            const num_clients = rooms[room_name];
+            const num_clients = rooms[room_name].clients;
+            const locked = rooms[room_name].locked;
             const iconStyle = {
                 width: 48,
                 height: 48,
                 cursor: "pointer",
                 paddingBottom: "50px"
             };
+            let iconLocked = <Public />;
+            if(locked){
+                iconLocked = <LockOutline />;
+            }
             if(room_name.startsWith(this.state.search, 0)) {
                 ret_data.push(
                     <ListItem
@@ -56,7 +62,7 @@ class RoomInfo extends Component{
                         key={room_name + i}
                         primaryText={room_name}
                         secondaryText={`Users: ${num_clients}`}
-                        leftIcon={<LockOpen />}
+                        leftIcon={iconLocked}
                         rightIcon={
                             <PlayArrow
                                 onClick={() => {
@@ -75,6 +81,7 @@ class RoomInfo extends Component{
             ret_data.push(
                 <ListItem
                     key="not_found"
+                    disabled={true}
                     primaryText={`No rooms matching '${this.state.search}' found`}
                     style={{color:"red"}}
                 />
@@ -132,7 +139,8 @@ class UserInfo extends Component{
 
     maxLen = {
         room: 6,
-        name: 10
+        name: 10,
+        pass: 8
     };
     required = ["room", "name"];
 
@@ -140,7 +148,8 @@ class UserInfo extends Component{
         super(props);
         this.state = {
             name: "",
-            room: ""
+            room: "",
+            pass: ""
         }
     }
 
@@ -150,6 +159,7 @@ class UserInfo extends Component{
         }
         localStorage.setItem('room', this.state.room);
         localStorage.setItem('name', this.state.name);
+        localStorage.setItem('pass', this.state.pass);
         location.href = `/room/${this.state.room}`
     };
 
@@ -158,24 +168,26 @@ class UserInfo extends Component{
         const name = event.target.name;
         if(value.length <= this.maxLen[name]) {
             this.state[name] = value;
-            localStorage.name = value;
+            localStorage[name] = value;
             this.setState(this.state);
         }
     };
 
     componentDidMount(){
-        console.log(localStorage);
         if(localStorage.room !== undefined){
             this.state.room = localStorage.room;
-            this.setState(this.state);
         }
+        if(localStorage.name !== undefined){
+            this.state.name = localStorage.name;
+        }
+        this.setState(this.state);
     };
 
 
     render(){
 
         const style = {
-            height: "250px",
+            height: "300px",
             width: "100%",
             textAlign: "center",
             display: "inline-block"
@@ -185,7 +197,8 @@ class UserInfo extends Component{
         };
         const errorText = {
             name: "",
-            room: ""
+            room: "",
+            pass: ""
         };
 
         this.required.map(field =>{
@@ -196,6 +209,14 @@ class UserInfo extends Component{
         for(const field in this.maxLen){
             if(this.state[field].length === this.maxLen[field]){
                 errorText[field] = `Max length for ${field} is ${this.maxLen[field]}`
+            }
+        }
+
+        if(localStorage.error){
+            console.log(localStorage);
+            const error = JSON.parse(localStorage.error);
+            if(error.pass){
+                errorText.pass = error.pass;
             }
         }
 
@@ -228,6 +249,17 @@ class UserInfo extends Component{
                         maxLength={this.maxLen.room}
                         value={this.state.room}
                     />
+                    <br />
+                    <TextField
+                        errorText={errorText.pass}
+                        hintText="Password"
+                        name="pass"
+                        type="password"
+                        onChange={this.handleChange}
+                        style={textFieldStyle}
+                        maxLength={this.maxLen.pass}
+                        value={this.state.pass}
+                    />
                     <RaisedButton
                         label="Join Room"
                         style={{
@@ -249,7 +281,7 @@ export default class LoginPage extends Component {
 
     render(){
         return(
-            <div style={{textAlign:"center", display:"inline-block", marginLeft:"40%", marginTop:"5%", width:"20%"}}>
+            <div style={{textAlign:"center", display:"inline-block", marginLeft:"40%", marginTop:"4%", width:"20%"}}>
                 <PageInfo />
                 <UserInfo />
                 <RoomInfo />

@@ -70,12 +70,32 @@ io.sockets.on('connection', function (socket) {
 
 
     socket.on("join-room", data => {
+        let new_room = false;
         if(!io.sockets.adapter.rooms[data.room]){
             socket.broadcast.emit("new-room");
+            new_room = true;
         }
-        console.log(data.user, "joined room", data.room, "\n");
         socket.join(data.room);
         socket.nickname = data.user;
+
+        if(new_room){
+            io.sockets.adapter.rooms[data.room].custom = {};
+            io.sockets.adapter.rooms[data.room].custom.locked = false;
+            if(data.pass){
+                io.sockets.adapter.rooms[data.room].custom.locked = true;
+                io.sockets.adapter.rooms[data.room].custom.password = data.pass;
+            }
+        }else{
+            if(io.sockets.adapter.rooms[data.room].custom.locked){
+                if(io.sockets.adapter.rooms[data.room].custom.password !== data.pass){
+                    socket.leave(data.room);
+                    socket.emit("join-room-failed", {reason: "Wrong password"});
+                    return
+                }
+            }
+        }
+
+        console.log(data.user, "joined room", data.room, "\n");
         const user = {
             i: socket.id,
             n: data.user,
@@ -89,6 +109,7 @@ io.sockets.on('connection', function (socket) {
             points: 0
         };
         socket.broadcast.to(data.room).emit('user-joined', ret_data);
+        socket.emit("join-room-success",{ok: "ok"});
         client.rpush(`sk:room:${data.room}:users`, JSON.stringify(user));
     });
 
@@ -124,7 +145,8 @@ io.sockets.on('connection', function (socket) {
         Object.keys(rooms).map(room => {
             if(room.length > 0 && room.length !== 20) {
                 const clients = io.sockets.adapter.rooms[room].sockets;
-                ret_data[room] = Object.keys(clients).length;
+                const locked = io.sockets.adapter.rooms[room].custom.locked;
+                ret_data[room] = {clients: Object.keys(clients).length, locked: locked}
             }
         });
         socket.emit("get-rooms-return", ret_data);
