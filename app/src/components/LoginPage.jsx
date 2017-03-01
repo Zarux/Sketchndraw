@@ -84,7 +84,7 @@ class RoomInfo extends Component{
 
     render(){
         const style = {
-            height: "250px",
+            height: "350px",
             width: "100%",
             textAlign: "center",
             display: "inline-block",
@@ -95,6 +95,7 @@ class RoomInfo extends Component{
 
         return (
             <Paper style={style}>
+                <h4>Ongoing rooms</h4>
                 <TextField
                     maxLength={6}
                     hintText={"Search for room"}
