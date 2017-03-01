@@ -36,9 +36,11 @@ class UserInfo extends Component{
     }
 
     handleClick = (event) => {
+        if(this.state.room === "" || this.state.name === ""){
+            return
+        }
         localStorage.setItem('room', this.state.room);
         localStorage.setItem('name', this.state.name);
-        console.log(this.context.router);
         location.href = `/room/${this.state.room}`
     };
 
