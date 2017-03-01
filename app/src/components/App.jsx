@@ -5,7 +5,10 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import darkBaseTheme from 'material-ui/styles/baseThemes/darkBaseTheme';
 import {cyan500} from 'material-ui/styles/colors';
+import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
 import IndexPage from './IndexPage'
+import LoginPage from './LoginPage'
+
 
 import injectTapEventPlugin from 'react-tap-event-plugin';
 injectTapEventPlugin();
@@ -19,6 +22,15 @@ const theme = getMuiTheme({
     },
 });
 
+const footerStyle ={
+    position:"fixed",
+    left:0,
+    bottom:0,
+    height:50,
+    width:"100%",
+    background:"#272727"
+};
+
 
 export default class App extends Component{
 
@@ -27,8 +39,13 @@ export default class App extends Component{
             <MuiThemeProvider muiTheme={theme}>
                 <Router history={browserHistory}>
                     <div className="app">
-                        <Route exact path="/" component={IndexPage}/>
+                        <Route exact path="/" component={LoginPage}/>
                         <Route path="/room/:room" component={IndexPage}/>
+                        <Toolbar style={footerStyle} >
+                            <ToolbarGroup float="right" firstChild={true}>
+                                <ToolbarTitle text="PLAAAAAAAAAAAAAAACEEEEEEEEEEEEEEEEEHOOOOOOOOOOOLDDEEEEEEEEEEEEER" />
+                            </ToolbarGroup>
+                        </Toolbar>
                     </div>
                 </Router>
             </MuiThemeProvider>

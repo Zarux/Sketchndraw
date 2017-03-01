@@ -86,6 +86,7 @@ class GuessBox extends Component{
                         width:"210px",
                     }}
                     /*hintText="Word here"*/
+                    name="guess_input"
                     onChange={this.handleChange}
                     onKeyDown={this.handleKeyDown}
                     value={this.state.value}
