@@ -49,7 +49,7 @@ class RoomInfo extends Component{
                 width: 48,
                 height: 48,
                 cursor: "pointer",
-                paddingBottom: "50px"
+                top: "0px"
             };
             let iconLocked = <Public />;
             if(locked){
@@ -62,8 +62,8 @@ class RoomInfo extends Component{
                         key={room_name + i}
                         primaryText={room_name}
                         secondaryText={`Users: ${num_clients}`}
-                        leftIcon={iconLocked}
-                        rightIcon={
+                        rightIcon={iconLocked}
+                        leftIcon={
                             <PlayArrow
                                 onClick={() => {
                                     localStorage.room = room_name;
