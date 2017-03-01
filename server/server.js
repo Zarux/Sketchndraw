@@ -40,6 +40,7 @@ io.sockets.on('connection', function (socket) {
                 if(room.length !== 20) {
                     console.log('Clearing data for room', room, "\n");
                 }
+                socket.broadcast.emit("del-room", {room:room});
                 client.del(`sk:room:${room}:chat`);
                 client.del(`sk:room:${room}:users`);
             }
@@ -69,6 +70,9 @@ io.sockets.on('connection', function (socket) {
 
 
     socket.on("join-room", data => {
+        if(!io.sockets.adapter.rooms[data.room]){
+            socket.broadcast.emit("new-room");
+        }
         console.log(data.user, "joined room", data.room, "\n");
         socket.join(data.room);
         socket.nickname = data.user;
@@ -113,6 +117,18 @@ io.sockets.on('connection', function (socket) {
             client.rpush(`sk:room:${data.room}:chat`, JSON.stringify(chat_object));
         }
     });
+
+    socket.on("get-rooms", data => {
+        const ret_data = {"test13":33, "test14":33};
+        const rooms = io.sockets.adapter.rooms;
+        Object.keys(rooms).map(room => {
+            if(room.length > 0 && room.length !== 20) {
+                const clients = io.sockets.adapter.rooms[room].sockets;
+                ret_data[room] = Object.keys(clients).length;
+            }
+        });
+        socket.emit("get-rooms-return", ret_data);
+    })
 });
 
 

@@ -2,6 +2,8 @@ import React, {Component} from 'react';
 import {List, ListItem} from 'material-ui/List';
 import Edit from 'material-ui/svg-icons/image/edit';
 import Visibility from 'material-ui/svg-icons/action/visibility'
+import Cancel from 'material-ui/svg-icons/navigation/cancel'
+import FlatButton from 'material-ui/FlatButton';
 import Paper from 'material-ui/Paper';
 import socket from '../socket'
 
@@ -86,6 +88,22 @@ export default class Users extends Component {
 
         return (
             <Paper style={style} zDepth={3}>
+                <FlatButton
+                    style={{
+                        width: "80%",
+                        marginLeft:"10%",
+                        marginRigth:"10%"
+                    }}
+                    backgroundColor="#ff8080"
+                    hoverColor="#ff9999"
+                    label={<span style={{color:"black"}}>LEAVE</span>}
+                    onClick={
+                            ()=>{
+                                delete localStorage.room;
+                                location.href = '/'
+                            }
+                    }
+                />
                 <h2 style={{textAlign:"center"}}>Users</h2>
                 <List children={this.mapUsers(this.state.users)} />
             </Paper>

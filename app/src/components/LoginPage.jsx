@@ -2,8 +2,11 @@ import React, {Component} from 'react';
 import TextField from "material-ui/TextField";
 import Paper from 'material-ui/Paper';
 import RaisedButton from "material-ui/RaisedButton";
-import Avatar from 'material-ui/Avatar'
-import { browserHistory } from 'react-router'
+import {List, ListItem} from 'material-ui/List';
+import LockOutline from 'material-ui/svg-icons/action/lock-outline'
+import LockOpen from 'material-ui/svg-icons/action/lock-open'
+import PlayArrow from 'material-ui/svg-icons/av/play-arrow'
+import socket from '../socket';
 
 class PageInfo extends Component{
     constructor(props){
@@ -15,6 +18,90 @@ class PageInfo extends Component{
             <div>
                 <h1>LOGO</h1>
             </div>
+        )
+    }
+}
+
+class RoomInfo extends Component{
+    constructor(props){
+        super(props);
+        this.state = {rooms: {}, search:""}
+    }
+
+
+    mapRooms(rooms){
+        return Object.keys(rooms).map((room_name, i) => {
+            const num_clients = rooms[room_name];
+            const iconStyle = {
+                width: 48,
+                height: 48,
+                cursor: "pointer",
+                paddingBottom: "50px"
+            };
+            if(!room_name.startsWith(this.state.search, 0)){
+                return (<span> </span>);
+            }
+            return (
+                <ListItem
+                    disabled={true}
+                    key={room_name+i}
+                    primaryText={room_name}
+                    secondaryText={`Users: ${num_clients}`}
+                    leftIcon={<LockOpen />}
+                    rightIcon={
+                            <PlayArrow
+                                onClick={()=>{
+                                    localStorage.room = room_name;
+                                    location.href = `/room/${room_name}`;
+                                }}
+                               style={iconStyle}
+                            />
+                    }
+                />
+            )
+        })
+    }
+
+    handleChange = (event) => {
+        this.state.search = event.target.value;
+        this.setState(this.state);
+    };
+
+    componentDidMount(){
+        socket.emit("get-rooms");
+        socket.on("new-room",() => {
+            socket.emit("get-rooms");
+        });
+        socket.on("del-room", data => {
+            delete this.state.rooms[data.room];
+            this.setState(this.state);
+        });
+        socket.on("get-rooms-return", data => {
+            this.state.rooms = data;
+            this.setState(this.state);
+        })
+    }
+
+    render(){
+        const style = {
+            height: "250px",
+            width: "100%",
+            textAlign: "center",
+            display: "inline-block",
+            marginTop:"10%",
+            overflowY:"scroll",
+            overflowX:"hidden"
+        };
+
+        return (
+            <Paper style={style}>
+                <TextField
+                    maxLength={6}
+                    hintText={"Search for room"}
+                    onChange={this.handleChange}
+                />
+                <List style={{width:"90%"}} children={this.mapRooms(this.state.rooms)} />
+            </Paper>
         )
     }
 }
@@ -49,6 +136,7 @@ class UserInfo extends Component{
         const name = event.target.name;
         if(value.length <= this.maxLen[name]) {
             this.state[name] = value;
+            localStorage.name = value;
             this.setState(this.state);
         }
     };
@@ -66,7 +154,7 @@ class UserInfo extends Component{
 
         const style = {
             height: "250px",
-            width: "20%",
+            width: "100%",
             textAlign: "center",
             display: "inline-block"
         };
@@ -139,9 +227,10 @@ export default class LoginPage extends Component {
 
     render(){
         return(
-            <div style={{textAlign:"center", marginTop: "10%"}}>
+            <div style={{textAlign:"center", display:"inline-block", marginLeft:"40%", marginTop:"5%", width:"20%"}}>
                 <PageInfo />
                 <UserInfo />
+                <RoomInfo />
             </div>
         )
     }

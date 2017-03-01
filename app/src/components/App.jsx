@@ -42,7 +42,7 @@ export default class App extends Component{
                         <Route exact path="/" component={LoginPage}/>
                         <Route path="/room/:room" component={IndexPage}/>
                         <Toolbar style={footerStyle} >
-                            <ToolbarGroup float="right" firstChild={true}>
+                            <ToolbarGroup style={{float:"right"}} firstChild={true}>
                                 <ToolbarTitle text="PLAAAAAAAAAAAAAAACEEEEEEEEEEEEEEEEEHOOOOOOOOOOOLDDEEEEEEEEEEEEER" />
                             </ToolbarGroup>
                         </Toolbar>
