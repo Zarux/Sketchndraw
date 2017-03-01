@@ -112,13 +112,15 @@ class RoomInfo extends Component{
 
     render(){
         const style = {
-            height: "350px",
+            height: "auto",
             width: "100%",
             textAlign: "center",
             display: "inline-block",
             marginTop:"10%",
             overflowY:"scroll",
-            overflowX:"hidden"
+            overflowX:"hidden",
+            maxHeight:"350px",
+            minHeight:"200px"
         };
 
         return (

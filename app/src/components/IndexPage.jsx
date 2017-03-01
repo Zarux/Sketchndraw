@@ -31,7 +31,7 @@ export default class IndexPage extends Component {
                localStorage.setItem("name", this.state.user);
                location.href = "/";
             });
-            socket.on("join-room-success", data=>{
+            socket.on("join-room-success", data => {
                 this.state.shouldRender = true;
                 this.setState(this.state);
             });
