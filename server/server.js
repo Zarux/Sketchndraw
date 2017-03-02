@@ -48,6 +48,15 @@ io.sockets.on('connection', function (socket) {
         });
     });
 
+    socket.on("check-password", data => {
+        let valid = true;
+        if(io.sockets.adapter.rooms[data.room]
+            && io.sockets.adapter.rooms[data.room].custom.locked
+            && io.sockets.adapter.rooms[data.room].custom.password !== data.pass){
+            valid = false;
+        }
+       socket.emit("check-password-return", {valid: valid});
+    });
 
     socket.on("get-users", data => {
         const room = data.room;

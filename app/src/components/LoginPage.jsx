@@ -159,10 +159,21 @@ class UserInfo extends Component{
         if(this.state.room === "" || this.state.name === ""){
             return
         }
-        localStorage.setItem('room', this.state.room);
-        localStorage.setItem('name', this.state.name);
-        localStorage.setItem('pass', this.state.pass);
-        location.href = `/room/${this.state.room}`
+        socket.emit("check-password",{room: this.state.room, pass: this.state.pass});
+        socket.on("check-password-return", data => {
+            localStorage.setItem('room', this.state.room);
+            localStorage.setItem('name', this.state.name);
+            localStorage.setItem('pass', this.state.pass);
+           if(data.valid){
+               location.href = `/room/${this.state.room}`
+           }else{
+               localStorage.setItem('pass', "");
+               localStorage.setItem("error", JSON.stringify({pass: "Wrong password"}));
+               this.state.pass = "";
+               this.setState(this.state);
+           }
+        });
+
     };
 
     handleChange = (event) => {
