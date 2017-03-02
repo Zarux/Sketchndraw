@@ -2,10 +2,9 @@ import React, {Component} from 'react';
 import {List, ListItem} from 'material-ui/List';
 import Edit from 'material-ui/svg-icons/image/edit';
 import Visibility from 'material-ui/svg-icons/action/visibility'
-import Cancel from 'material-ui/svg-icons/navigation/cancel'
 import FlatButton from 'material-ui/FlatButton';
 import Paper from 'material-ui/Paper';
-import socket from '../socket'
+import socket from '../../../socket'
 
 class User extends Component {
 
