@@ -45,6 +45,7 @@ io.sockets.on('connection', function (socket) {
                 socket.broadcast.emit("del-room", {room:room});
                 client.del(`sk:room:${room}:chat`);
                 client.del(`sk:room:${room}:users`);
+                client.del(`sk:room:${room}:drawing`);
             }
         });
     });
@@ -81,6 +82,9 @@ io.sockets.on('connection', function (socket) {
 
 
     socket.on("join-room", data => {
+        if(Object.keys(socket.rooms).length > 2){
+            socket.emit("join-room-failed", {reason: "Already in a room"});
+        }
         let new_room = false;
         if(!io.sockets.adapter.rooms[data.room]){
             socket.broadcast.emit("new-room");
@@ -141,6 +145,13 @@ io.sockets.on('connection', function (socket) {
         }
     });
 
+    socket.on("full-drawing", data => {
+        const room = Object.keys(socket.rooms).find(x => x.length !== 20);
+        client.get(`sk:room:${room}:drawing`, (err, message) => {
+            socket.emit("full-drawing-return", JSON.parse(message));
+        });
+    });
+
 
     socket.on('new-message', data => {
         if(data.message !== "" && data.room){
@@ -161,6 +172,18 @@ io.sockets.on('connection', function (socket) {
             }
         });
         socket.emit("get-rooms-return", ret_data);
+    });
+
+    socket.on("mouse-move", data => {
+        const room = Object.keys(socket.rooms).find(x => x.length !== 20);
+        //client.rpush(`sk:room:${room}:drawing`, JSON.stringify(data));
+        socket.broadcast.to(room).emit('mouse-move-return', data);
+    });
+
+    socket.on("mouse-up", data => {
+        const room = Object.keys(socket.rooms).find(x => x.length !== 20);
+        client.set(`sk:room:${room}:drawing`, JSON.stringify(data), (err, msg) => {console.log(err)});
+        socket.broadcast.to(room).emit('mouse-up-return', "");
     })
 });
 
