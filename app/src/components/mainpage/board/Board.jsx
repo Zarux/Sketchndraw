@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
-import socket from '../socket'
+import socket from '../../../socket'
 import Paper from 'material-ui/Paper';
-
 export default class Board extends Component {
 
     constructor(props){
@@ -20,7 +19,14 @@ export default class Board extends Component {
         };
         return (
             <Paper style={style} zDepth={3}>
-
+                <canvas
+                    style={{
+                        width:"90%",
+                        height: "90%",
+                        marginLeft:"5%",
+                        marginTop:"5%",
+                        border:"1px solid black"
+                    }} />
             </Paper>
         )
     }

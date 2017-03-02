@@ -1,11 +1,10 @@
 import React, {Component} from 'react';
-import Chat from './Chat';
-import socket from '../socket';
-import Users from "./Users";
-import Board from './Board';
+import Chat from './chat/Chat';
+import Users from "./users/Users";
+import Board from './board/Board';
+import socket from '../../socket';
 
-
-export default class IndexPage extends Component {
+export default class MainPage extends Component {
     constructor(props){
         super(props);
         this.state = {room: this.props.match.params.room.substr(0,6)};
