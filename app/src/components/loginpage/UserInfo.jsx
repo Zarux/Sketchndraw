@@ -30,20 +30,36 @@ export default class UserInfo extends Component{
         if(this.state.room === "" || this.state.name === ""){
             return
         }
+
         this.state.loading = true;
         this.setState(this.state);
-        socket.emit("check-password",{room: this.state.room, pass: this.state.pass});
-        socket.on("check-password-return", data => {
+
+        socket.emit("check-info",{room: this.state.room, name: this.state.name, pass: this.state.pass});
+
+        socket.on("check-info-return", data => {
             this.state.loading = false;
+
             localStorage.setItem('room', this.state.room);
             localStorage.setItem('name', this.state.name);
             localStorage.setItem('pass', this.state.pass);
-            if(data.valid){
+
+            if(data.valid.name && data.valid.pass){
                 location.href = `/room/${this.state.room}`
             }else{
-                localStorage.setItem('pass', "");
-                localStorage.setItem("error", JSON.stringify({pass: "Wrong password"}));
-                this.state.pass = "";
+                const error = {};
+
+                if(!data.valid.pass){
+                    localStorage.setItem('pass', "");
+                    error.pass = "Wrong password"
+                    this.state.pass = "";
+                }
+
+                if(!data.valid.name){
+                    localStorage.setItem('name', "");
+                    error.name = "Duplicate name";
+                }
+
+                localStorage.setItem("error", JSON.stringify(error));
             }
             this.setState(this.state);
         });
@@ -91,6 +107,7 @@ export default class UserInfo extends Component{
         const errorStyle = {
             name: {color: green500},
             room: {color: green500},
+            pass: {color: red500},
         };
 
         this.required.map(field =>{
@@ -107,11 +124,11 @@ export default class UserInfo extends Component{
         }
 
         if(localStorage.error){
-            console.log(localStorage);
             const error = JSON.parse(localStorage.error);
-            if(error.pass){
-                errorText.pass = error.pass;
-            }
+            Object.keys(error).forEach(field => {
+                errorText[field] = error[field];
+                errorStyle[field].color = red500;
+            })
         }
 
         this.state.buttonDisabled = (this.state.room === "" || this.state.name === "");

@@ -14,7 +14,7 @@ const client = redis.createClient({
 client.flushall();
 
 io.sockets.on('connection', function (socket) {
-
+    socket.mainRoom = ""
     socket.on("disconnecting", ()=>{
         Object.keys(socket.rooms).forEach(room => {
             const clients = io.sockets.adapter.rooms[room].sockets;
@@ -27,57 +27,45 @@ io.sockets.on('connection', function (socket) {
                 id: socket.id
             });
 
-            client.lrange(`sk:room:${room}:users`, 0, -1, (err, message) => {
-                client.del(`sk:room:${room}:users`);
-                message.forEach(x => {
-                    const obj = JSON.parse(x);
-                    const id = obj.i;
-                    if(socket.id !== id){
-                        client.rpush(`sk:room:${room}:users`, JSON.stringify(obj));
-                    }
-                });
-            });
-
             if(num_clients === 0){
                 if(room.length !== 20) {
                     console.log('Clearing data for room', room, "\n");
                 }
                 socket.broadcast.emit("del-room", {room:room});
                 client.del(`sk:room:${room}:chat`);
-                client.del(`sk:room:${room}:users`);
                 client.del(`sk:room:${room}:drawing`);
             }
         });
     });
 
-    socket.on("check-password", data => {
-        let valid = true;
+    socket.on("check-info", data => {
+        const valid =  {
+            name: true,
+            pass: true
+        };
+
+        if(!io.sockets.adapter.rooms[data.room]){
+            socket.emit("check-info-return", {valid: valid});
+            return
+        }
+
         if(io.sockets.adapter.rooms[data.room]
             && io.sockets.adapter.rooms[data.room].custom.locked
             && io.sockets.adapter.rooms[data.room].custom.password !== data.pass){
-            valid = false;
+            valid.pass = false;
         }
-       socket.emit("check-password-return", {valid: valid});
+
+        valid.name = io.sockets.adapter.rooms[data.room].custom.users.indexOf(data.name) === -1;
+        socket.emit("check-info-return", {valid: valid});
+
     });
 
     socket.on("get-users", data => {
-        const room = data.room;
-        if(Object.keys(socket.rooms).find(x => x === room)){
-            client.lrange(`sk:room:${room}:users`, 0, -1, (err, message) => {
-                const ret_data = {};
-                const data = message.map(x => {
-                    const obj = JSON.parse(x);
-                    const id = obj.i;
-                    ret_data[id] = {
-                            name: obj.n,
-                            drawing: obj.d,
-                            points: obj.p
-                        };
-                    return ret_data;
-                });
-                socket.emit("get-users-return", ret_data);
-            })
-        }
+        const ret_data = {};
+        Object.keys(io.sockets.adapter.rooms[socket.mainRoom].sockets).forEach(sock => {
+            ret_data[sock] = io.sockets.connected[sock].user;
+        });
+        socket.emit("get-users-return", ret_data);
     });
 
 
@@ -99,6 +87,7 @@ io.sockets.on('connection', function (socket) {
             if(data.pass){
                 io.sockets.adapter.rooms[data.room].custom.locked = true;
                 io.sockets.adapter.rooms[data.room].custom.password = data.pass;
+                io.sockets.adapter.rooms[data.room].custom.users = [data.user];
             }
         }else{
             if(io.sockets.adapter.rooms[data.room].custom.locked){
@@ -109,14 +98,15 @@ io.sockets.on('connection', function (socket) {
                 }
             }
         }
-
+        io.sockets.adapter.rooms[data.room].custom.users.push(data.user);
         console.log(data.user, "joined room", data.room, "\n");
-        const user = {
-            i: socket.id,
-            n: data.user,
-            d: false,
-            p: 0
+        socket.user = {
+            id: socket.id,
+            name: data.user,
+            drawing: false,
+            points: 0
         };
+        socket.mainRoom = data.room;
         const ret_data = {};
         ret_data[socket.id] = {
             name: data.user,
@@ -125,7 +115,6 @@ io.sockets.on('connection', function (socket) {
         };
         socket.broadcast.to(data.room).emit('user-joined', ret_data);
         socket.emit("join-room-success",{ok: "ok"});
-        client.rpush(`sk:room:${data.room}:users`, JSON.stringify(user));
     });
 
 
@@ -146,7 +135,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on("full-drawing", data => {
-        const room = Object.keys(socket.rooms).find(x => x.length !== 20);
+        const room = socket.mainRoom;
         client.get(`sk:room:${room}:drawing`, (err, message) => {
             socket.emit("full-drawing-return", JSON.parse(message));
         });
@@ -175,13 +164,13 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on("mouse-move", data => {
-        const room = Object.keys(socket.rooms).find(x => x.length !== 20);
+        const room = socket.mainRoom;
         //client.rpush(`sk:room:${room}:drawing`, JSON.stringify(data));
         socket.broadcast.to(room).emit('mouse-move-return', data);
     });
 
     socket.on("mouse-up", data => {
-        const room = Object.keys(socket.rooms).find(x => x.length !== 20);
+        const room = socket.mainRoom;
         client.set(`sk:room:${room}:drawing`, JSON.stringify(data), (err, msg) => {console.log(err)});
         socket.broadcast.to(room).emit('mouse-up-return', "");
     })
