@@ -30,6 +30,7 @@
     "material-ui": "^0.17.0",
     "node-sass": "^4.5.0",
     "react": "15",
+    "react-color": "^2.11.1",
     "react-dom": "15",
     "react-flexbox-grid": "^0.10.2",
     "react-redux": "5",

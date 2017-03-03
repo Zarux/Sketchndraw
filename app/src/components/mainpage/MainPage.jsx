@@ -11,30 +11,30 @@ export default class MainPage extends Component {
         if(!this.state.room){
             this.state.room = 1;
         }
-        const username = localStorage.name;
-        const room = localStorage.room;
+        const username = sessionStorage.name;
+        const room = sessionStorage.room;
         this.state.shouldRender = false;
         if(!username){
             if(!room && this.state.room){
-                localStorage.setItem("room", this.state.room);
+                sessionStorage.setItem("room", this.state.room);
             }
             this.state.shouldRender = false;
             location.href = "/";
         }else{
             this.state.user = username;
             history.replaceState("", `Sketchndraw - ${this.state.room}`, `/room/${this.state.room}`);
-            socket.emit("join-room", {room: this.state.room, user: this.state.user, pass: localStorage.pass});
+            socket.emit("join-room", {room: this.state.room, user: this.state.user, pass: sessionStorage.pass});
             socket.on("join-room-failed", data => {
-               localStorage.setItem("error", JSON.stringify({pass: data.reason}));
-               localStorage.setItem("room", this.state.room);
-               localStorage.setItem("name", this.state.user);
+               sessionStorage.setItem("error", JSON.stringify({pass: data.reason}));
+               sessionStorage.setItem("room", this.state.room);
+               sessionStorage.setItem("name", this.state.user);
                location.href = "/";
             });
             socket.on("join-room-success", data => {
                 this.state.shouldRender = true;
                 this.setState(this.state);
             });
-            localStorage.clear();
+            //sessionStorage.clear();
         }
     }
 

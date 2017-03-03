@@ -39,9 +39,9 @@ export default class UserInfo extends Component{
         socket.on("check-info-return", data => {
             this.state.loading = false;
 
-            localStorage.setItem('room', this.state.room);
-            localStorage.setItem('name', this.state.name);
-            localStorage.setItem('pass', this.state.pass);
+            sessionStorage.setItem('room', this.state.room);
+            sessionStorage.setItem('name', this.state.name);
+            sessionStorage.setItem('pass', this.state.pass);
 
             if(data.valid.name && data.valid.pass){
                 location.href = `/room/${this.state.room}`
@@ -49,17 +49,17 @@ export default class UserInfo extends Component{
                 const error = {};
 
                 if(!data.valid.pass){
-                    localStorage.setItem('pass', "");
-                    error.pass = "Wrong password"
+                    sessionStorage.setItem('pass', "");
+                    error.pass = "Wrong password";
                     this.state.pass = "";
                 }
 
                 if(!data.valid.name){
-                    localStorage.setItem('name', "");
+                    sessionStorage.setItem('name', "");
                     error.name = "Duplicate name";
                 }
 
-                localStorage.setItem("error", JSON.stringify(error));
+                sessionStorage.setItem("error", JSON.stringify(error));
             }
             this.setState(this.state);
         });
@@ -70,18 +70,18 @@ export default class UserInfo extends Component{
         const name = event.target.name;
         if(value.length <= this.maxLen[name]) {
             this.state[name] = value;
-            localStorage[name] = value;
+            sessionStorage[name] = value;
             this.state.loading = false;
             this.setState(this.state);
         }
     };
 
     componentDidMount(){
-        if(localStorage.room !== undefined){
-            this.state.room = localStorage.room;
+        if(sessionStorage.room !== undefined){
+            this.state.room = sessionStorage.room;
         }
-        if(localStorage.name !== undefined){
-            this.state.name = localStorage.name;
+        if(sessionStorage.name !== undefined){
+            this.state.name = sessionStorage.name;
         }
         this.setState(this.state);
     };
@@ -118,13 +118,13 @@ export default class UserInfo extends Component{
         });
         for(const field in this.maxLen){
             if(this.state[field].length === this.maxLen[field]){
-                errorText[field] = `Max length for ${field} is ${this.maxLen[field]}`
+                errorText[field] = `Max length for ${field} is ${this.maxLen[field]}`;
                 errorStyle[field].color = red500;
             }
         }
 
-        if(localStorage.error){
-            const error = JSON.parse(localStorage.error);
+        if(sessionStorage.error){
+            const error = JSON.parse(sessionStorage.error);
             Object.keys(error).forEach(field => {
                 errorText[field] = error[field];
                 errorStyle[field].color = red500;

@@ -91,14 +91,14 @@ export default class Users extends Component {
                     style={{
                         width: "80%",
                         marginLeft:"10%",
-                        marginRigth:"10%"
+                        marginRight:"10%"
                     }}
                     backgroundColor="#ff8080"
                     hoverColor="#ff9999"
                     label={<span style={{color:"black"}}>LEAVE</span>}
                     onClick={
                             ()=>{
-                                delete localStorage.room;
+                                delete sessionStorage.room;
                                 location.href = '/'
                             }
                     }

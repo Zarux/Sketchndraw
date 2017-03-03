@@ -51,7 +51,7 @@ export default class RoomInfo extends Component{
                         leftIcon={
                             <PlayArrow
                                 onClick={() => {
-                                    localStorage.room = room_name;
+                                    sessionStorage.room = room_name;
                                     location.href = `/room/${room_name}`;
                                 }}
                                 style={iconStyle}

@@ -14,7 +14,8 @@ const client = redis.createClient({
 client.flushall();
 
 io.sockets.on('connection', function (socket) {
-    socket.mainRoom = ""
+    socket.mainRoom = Object.keys(socket.rooms)[0];
+
     socket.on("disconnecting", ()=>{
         Object.keys(socket.rooms).forEach(room => {
             const clients = io.sockets.adapter.rooms[room].sockets;
@@ -33,7 +34,6 @@ io.sockets.on('connection', function (socket) {
                 }
                 socket.broadcast.emit("del-room", {room:room});
                 client.del(`sk:room:${room}:chat`);
-                client.del(`sk:room:${room}:drawing`);
             }
         });
     });
@@ -81,6 +81,13 @@ io.sockets.on('connection', function (socket) {
         socket.join(data.room);
         socket.nickname = data.user;
 
+        const userData = {
+            id: socket.id,
+            name: data.user,
+            drawing: false,
+            points: 0
+        };
+
         if(new_room){
             io.sockets.adapter.rooms[data.room].custom = {};
             io.sockets.adapter.rooms[data.room].custom.locked = false;
@@ -89,6 +96,8 @@ io.sockets.on('connection', function (socket) {
                 io.sockets.adapter.rooms[data.room].custom.locked = true;
                 io.sockets.adapter.rooms[data.room].custom.password = data.pass;
             }
+            userData.drawing = true;
+            io.sockets.adapter.rooms[data.room].custom.drawer = socket.id;
         }else{
             if(io.sockets.adapter.rooms[data.room].custom.locked){
                 if(io.sockets.adapter.rooms[data.room].custom.password !== data.pass){
@@ -100,12 +109,7 @@ io.sockets.on('connection', function (socket) {
         }
         io.sockets.adapter.rooms[data.room].custom.users.push(data.user);
         console.log(data.user, "joined room", data.room, "\n");
-        socket.user = {
-            id: socket.id,
-            name: data.user,
-            drawing: false,
-            points: 0
-        };
+        socket.user = userData;
         socket.mainRoom = data.room;
         const ret_data = {};
         ret_data[socket.id] = {
@@ -134,11 +138,20 @@ io.sockets.on('connection', function (socket) {
         }
     });
 
-    socket.on("full-drawing", data => {
+    socket.on("request-full-drawing", data => {
         const room = socket.mainRoom;
-        client.get(`sk:room:${room}:drawing`, (err, message) => {
-            socket.emit("full-drawing-return", JSON.parse(message));
-        });
+        const drawer = io.sockets.adapter.rooms[room].custom.drawer;
+        io.sockets.connected[drawer].emit('request-full-drawing', {id: socket.id});
+    });
+
+    socket.on("send-full-drawing", data => {
+        if(data) {
+            socket.emit("full-drawing-return", data);
+        }
+    });
+
+    socket.on("send-full-drawing1", data => {
+        io.sockets.connected[data.id].emit("send-full-drawing", data)
     });
 
 
@@ -165,13 +178,11 @@ io.sockets.on('connection', function (socket) {
 
     socket.on("mouse-move", data => {
         const room = socket.mainRoom;
-        //client.rpush(`sk:room:${room}:drawing`, JSON.stringify(data));
         socket.broadcast.to(room).emit('mouse-move-return', data);
     });
 
     socket.on("mouse-up", data => {
         const room = socket.mainRoom;
-        client.set(`sk:room:${room}:drawing`, JSON.stringify(data), (err, msg) => {console.log(err)});
         socket.broadcast.to(room).emit('mouse-up-return', "");
     })
 });

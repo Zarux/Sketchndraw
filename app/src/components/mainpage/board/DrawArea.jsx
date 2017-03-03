@@ -10,57 +10,58 @@ export default class DrawArea extends Component{
         this.state = {
             remoteDrawing: false,
             drawingMode: false,
-            color: "#000",
-            width: 5
+            isDrawer: true
         }
     }
 
     handleMouseDown = (event) => {
-        this.state.drawingMode = true;
-        this.setState(this.state)
+        if(this.state.isDrawer){
+            this.state.drawingMode = true;
+            this.state.pointer = this.canvas.getPointer(event.e);
+        }
+
     };
 
     handleMouseUp = (event) => {
-        this.state.drawingMode = false;
-        socket.emit("mouse-up", this.canvas.toJSON());
+        if(this.state.isDrawer){
+            this.state.drawingMode = false;
+        }
     };
 
     handleMouseLeave = (event) => {
-        this.state.drawingMode = false;
-        this.setState(this.state)
+        if(this.state.isDrawer){
+            this.state.drawingMode = false;
+        }
     };
 
     handleMouseMove = (event) => {
         if(!this.state.drawingMode){
             return
         }
-
-        const drawingData = {
-            room: this.props.room,
-            mouse: this.canvas.getPointer(event.e),
-            color: this.state.color,
-            width: this.state.width
-        };
-        socket.emit("mouse-move", drawingData);
+        this.state.pointer = this.canvas.getPointer(event.e);
+        socket.emit("mouse-move", {
+            mouse: this.state.pointer,
+            color: this.props.color,
+            width: this.props.penSize
+        });
     };
 
     componentDidMount(){
         this.canvas = new fabric.Canvas('paper', {
-            isDrawingMode: true,
+            isDrawingMode: this.state.isDrawer,
             selection: false,
             height: this.paper.parentNode.offsetHeight * 0.8,
             width: this.paper.parentNode.offsetWidth * 0.9,
         });
-
         this.canvas.on('mouse:move', this.handleMouseMove);
         this.canvas.on('mouse:down', this.handleMouseDown);
         this.canvas.on('mouse:up', this.handleMouseUp);
         this.canvas.on('mouse:leave', this.handleMouseLeave);
 
         this.canvas.freeDrawingBrush = new fabric.PencilBrush(this.canvas);
+        this.canvas.freeDrawingBrush.color = this.props.color;
+        this.canvas.freeDrawingBrush.width = this.props.penSize;
         this.canvas.remotePen = new fabric.PencilBrush(this.canvas);
-        this.canvas.freeDrawingBrush.color = this.state.color;
-        this.canvas.freeDrawingBrush.width = this.state.width;
         this.canvas.on('mouse:move', this.handleMouseMove);
 
         socket.on("mouse-move-return", data => {
@@ -78,15 +79,38 @@ export default class DrawArea extends Component{
             this.state.remoteDrawing = false;
         });
 
-        socket.emit("full-drawing");
+        socket.emit("request-full-drawing");
+        console.log("Requesting full drawing");
+        socket.on("request-full-drawing", data => {
+            if(this.state.drawingMode){
+                this.canvas.freeDrawingBrush.onMouseUp(this.state.pointer);
+                this.canvas.freeDrawingBrush.onMouseDown(this.state.pointer);
+            }
+            socket.emit("send-full-drawing1", {drawing: this.canvas.toJSON(), id: data.id});
+        });
+        socket.on("send-full-drawing", data => {
+            socket.emit("send-full-drawing", data);
+        });
+
         socket.on("full-drawing-return", data => {
-            if(data){
-                this.canvas.loadFromJSON(data, this.canvas.renderAll.bind(this.canvas));
+            console.log("Got drawing");
+            if(data.drawing){
+                console.log("Got valid drawing");
+                this.canvas.loadFromJSON(data.drawing, this.canvas.renderAll.bind(this.canvas));
             }
         });
     }
 
     render(){
+        if(this.canvas) {
+            this.canvas.freeDrawingBrush.color = this.props.color;
+            this.canvas.freeDrawingBrush.width = this.props.penSize;
+            if(this.props.clearCanvas){
+                this.canvas.clear()
+                this.props.onClearCanvas()
+            }
+        }
+
         const style = {
             marginLeft:"5%",
             marginTop:"5%",
