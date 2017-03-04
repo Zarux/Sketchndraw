@@ -45,6 +45,7 @@ export default class Tools extends Component{
                         </div>
                         ): ""}
                     <RaisedButton
+                        disabled={!this.props.isDrawer}
                         style={{width:10}}
                         label={<Palette style={this.buttonIconStyle}/>}
                         backgroundColor={this.props.color}
@@ -52,6 +53,7 @@ export default class Tools extends Component{
                     />
                     <ToolbarSeparator />
                     <Slider
+                        disabled={!this.props.isDrawer}
                         defaultValue={this.props.penSize}
                         value={this.props.penSize}
                         min={3}
@@ -62,6 +64,7 @@ export default class Tools extends Component{
                     />
                     <ToolbarSeparator />
                     <RaisedButton
+                        disabled={!this.props.isDrawer}
                         label={<Delete style={{paddingTop:5, color:"#747474"}} />}
                         onClick={this.props.handleClearCanvas}
                     />

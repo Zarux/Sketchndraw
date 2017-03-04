@@ -142,7 +142,9 @@ io.sockets.on('connection', function (socket) {
     socket.on("request-full-drawing", data => {
         const room = socket.mainRoom;
         const drawer = io.sockets.adapter.rooms[room].custom.drawer;
-        io.sockets.connected[drawer].emit('request-full-drawing', {id: socket.id});
+        if(drawer) {
+            io.sockets.connected[drawer].emit('request-full-drawing', {id: socket.id});
+        }
     });
 
     socket.on("send-full-drawing", data => {
@@ -184,8 +186,15 @@ io.sockets.on('connection', function (socket) {
 
     socket.on("mouse-up", data => {
         const room = socket.mainRoom;
-        socket.broadcast.to(room).emit('mouse-up-return', "");
-    })
+        socket.broadcast.to(room).emit('mouse-up-return', data);
+    });
+
+    socket.on("mouse-down", data => {
+        const room = socket.mainRoom;
+        socket.broadcast.to(room).emit('mouse-down-return', data);
+    });
+
+
 });
 
 

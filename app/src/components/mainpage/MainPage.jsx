@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Row, Col} from 'react-flexbox-grid'
+import {Grid, Row, Col} from 'react-flexbox-grid'
 import Chat from './chat/Chat';
 import Users from "./users/Users";
 import Board from './board/Board';
@@ -42,7 +42,7 @@ export default class MainPage extends Component {
                 this.setState({...this.state, shouldRender: true});
             });
 
-            sessionStorage.clear();
+            //sessionStorage.clear();
         }
     }
 
@@ -63,17 +63,9 @@ export default class MainPage extends Component {
         }
         return (
             <div style={style}>
-                <Row>
-                    <Col xs>
-                        <Users user={this.state.user} room={this.state.room}/>
-                    </Col>
-                    <Col xs>
-                        <Board />
-                    </Col>
-                    <Col xs>
-                        <Chat user={this.state.user} room={this.state.room}/>
-                    </Col>
-                </Row>
+                <Users user={this.state.user} room={this.state.room}/>
+                <Board />
+                <Chat user={this.state.user} room={this.state.room}/>
             </div>
         );
     }

@@ -6,31 +6,38 @@ export default class DrawArea extends Component{
     canvas = null;
     drawingMode = false;
     remoteDrawing = false;
-    isDrawer = true;
+    isDrawer = false;
     pointer = null;
+    sendMouseMove = true;
 
     constructor(props){
         super(props);
-        this.state = {}
+        this.state = {};
+        this.isDrawer = this.props.isDrawer;
     }
 
     handleMouseDown = (event) => {
         if(this.isDrawer){
             this.drawingMode = true;
             this.pointer = this.canvas.getPointer(event.e);
+            socket.emit("mouse-down", {
+                pointer: this.pointer,
+                color: this.props.color,
+                width: this.props.penSize
+            });
         }
-
     };
 
     handleMouseUp = (event) => {
         if(this.isDrawer){
             this.drawingMode = false;
+            socket.emit("mouse-up", this.pointer);
         }
     };
 
     handleMouseLeave = (event) => {
         if(this.isDrawer){
-            this.state.drawingMode = false;
+            this.drawingMode = false;
         }
     };
 
@@ -38,17 +45,23 @@ export default class DrawArea extends Component{
         if(!this.drawingMode){
             return
         }
-        this.state.pointer = this.canvas.getPointer(event.e);
+        if(!this.sendMouseMove){
+            this.sendMouseMove = true;
+            console.log("dont send this one")
+            return;
+        }
+        this.pointer = this.canvas.getPointer(event.e);
+        this.sendMouseMove = false;
         socket.emit("mouse-move", {
-            mouse: this.pointer,
-            color: this.color,
-            width: this.penSize
+            pointer: this.pointer,
+            color: this.props.color,
+            width: this.props.penSize
         });
     };
 
     componentDidMount(){
         this.canvas = new fabric.Canvas('paper', {
-            isDrawingMode: this.isDrawer,
+            isDrawingMode: true,
             selection: false,
             height: this.paper.parentNode.offsetHeight * 0.8,
             width: this.paper.parentNode.offsetWidth * 0.9,
@@ -62,21 +75,27 @@ export default class DrawArea extends Component{
         this.canvas.freeDrawingBrush.color = this.props.color;
         this.canvas.freeDrawingBrush.width = this.props.penSize;
         this.canvas.remotePen = new fabric.PencilBrush(this.canvas);
-        this.canvas.on('mouse:move', this.handleMouseMove);
 
         socket.on("mouse-move-return", data => {
             this.canvas.remotePen.color = data.color;
             this.canvas.remotePen.width = data.width;
             if(!this.remoteDrawing){
-                this.canvas.remotePen.onMouseDown(data.mouse);
+                this.canvas.remotePen.onMouseDown(data.pointer);
                 this.remoteDrawing = true;
             }
-            this.canvas.remotePen.onMouseMove(data.mouse);
+            this.canvas.remotePen.onMouseMove(data.pointer);
         });
 
         socket.on("mouse-up-return", data => {
-            this.canvas.remotePen.onMouseUp();
+            this.canvas.remotePen.onMouseUp(data);
             this.remoteDrawing = false;
+        });
+
+        socket.on("mouse-down-return", data => {
+            this.canvas.remotePen.color = data.color;
+            this.canvas.remotePen.width = data.width;
+            this.canvas.remotePen.onMouseDown(data.pointer);
+            this.remoteDrawing = true;
         });
 
         socket.emit("request-full-drawing");
@@ -102,14 +121,17 @@ export default class DrawArea extends Component{
         });
     }
 
+    componentDidUpdate(){
+        if(this.props.clearCanvas){
+            this.canvas.clear()
+            this.props.onClearCanvas()
+        }
+    }
+
     render(){
         if(this.canvas) {
             this.canvas.freeDrawingBrush.color = this.props.color;
             this.canvas.freeDrawingBrush.width = this.props.penSize;
-            if(this.props.clearCanvas){
-                this.canvas.clear()
-                this.props.onClearCanvas()
-            }
         }
 
         const style = {

@@ -11,7 +11,8 @@ export default class Board extends Component {
         this.state = {
             penSize : 8,
             color: "#000",
-            clearCanvas: false
+            isDrawer: !false,
+            clearCanvas: false,
         }
     }
 
@@ -20,17 +21,14 @@ export default class Board extends Component {
     };
 
     handleColorChange = (color, event) => {
-        this.state.color = color.hex;
         this.setState({...this.state, color: color.hex});
     };
 
     handleClearCanvas = (event) => {
-        this.state.clearCanvas = true;
         this.setState({...this.state, clearCanvas: true});
     };
 
     handleOnClearedCanvas = (event) => {
-        this.state.clearCanvas = false;
         this.setState({...this.state, clearCanvas: false});
     };
 
@@ -52,6 +50,7 @@ export default class Board extends Component {
                         penSize={this.state.penSize}
                         clearCanvas={this.state.clearCanvas}
                         onClearCanvas={this.handleOnClearedCanvas}
+                        isDrawer={this.state.isDrawer}
                     />
 
                     <Tools
@@ -60,6 +59,7 @@ export default class Board extends Component {
                         handleClearCanvas={this.handleClearCanvas}
                         color={this.state.color}
                         penSize={this.state.penSize}
+                        isDrawer={this.state.isDrawer}
                     />
                 </Paper>
         )
