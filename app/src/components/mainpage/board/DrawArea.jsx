@@ -4,51 +4,51 @@ import socket from '../../../socket'
 export default class DrawArea extends Component{
 
     canvas = null;
+    drawingMode = false;
+    remoteDrawing = false;
+    isDrawer = true;
+    pointer = null;
 
     constructor(props){
         super(props);
-        this.state = {
-            remoteDrawing: false,
-            drawingMode: false,
-            isDrawer: true
-        }
+        this.state = {}
     }
 
     handleMouseDown = (event) => {
-        if(this.state.isDrawer){
-            this.state.drawingMode = true;
-            this.state.pointer = this.canvas.getPointer(event.e);
+        if(this.isDrawer){
+            this.drawingMode = true;
+            this.pointer = this.canvas.getPointer(event.e);
         }
 
     };
 
     handleMouseUp = (event) => {
-        if(this.state.isDrawer){
-            this.state.drawingMode = false;
+        if(this.isDrawer){
+            this.drawingMode = false;
         }
     };
 
     handleMouseLeave = (event) => {
-        if(this.state.isDrawer){
+        if(this.isDrawer){
             this.state.drawingMode = false;
         }
     };
 
     handleMouseMove = (event) => {
-        if(!this.state.drawingMode){
+        if(!this.drawingMode){
             return
         }
         this.state.pointer = this.canvas.getPointer(event.e);
         socket.emit("mouse-move", {
-            mouse: this.state.pointer,
-            color: this.props.color,
-            width: this.props.penSize
+            mouse: this.pointer,
+            color: this.color,
+            width: this.penSize
         });
     };
 
     componentDidMount(){
         this.canvas = new fabric.Canvas('paper', {
-            isDrawingMode: this.state.isDrawer,
+            isDrawingMode: this.isDrawer,
             selection: false,
             height: this.paper.parentNode.offsetHeight * 0.8,
             width: this.paper.parentNode.offsetWidth * 0.9,
@@ -67,35 +67,36 @@ export default class DrawArea extends Component{
         socket.on("mouse-move-return", data => {
             this.canvas.remotePen.color = data.color;
             this.canvas.remotePen.width = data.width;
-            if(!this.state.remoteDrawing){
+            if(!this.remoteDrawing){
                 this.canvas.remotePen.onMouseDown(data.mouse);
-                this.state.remoteDrawing = true;
+                this.remoteDrawing = true;
             }
             this.canvas.remotePen.onMouseMove(data.mouse);
         });
 
         socket.on("mouse-up-return", data => {
             this.canvas.remotePen.onMouseUp();
-            this.state.remoteDrawing = false;
+            this.remoteDrawing = false;
         });
 
         socket.emit("request-full-drawing");
-        console.log("Requesting full drawing");
+
         socket.on("request-full-drawing", data => {
-            if(this.state.drawingMode){
-                this.canvas.freeDrawingBrush.onMouseUp(this.state.pointer);
-                this.canvas.freeDrawingBrush.onMouseDown(this.state.pointer);
+            if(this.drawingMode){
+                this.canvas.freeDrawingBrush.onMouseUp(this.pointer);
+                this.canvas.freeDrawingBrush.onMouseDown(this.pointer);
             }
-            socket.emit("send-full-drawing1", {drawing: this.canvas.toJSON(), id: data.id});
+            socket.emit("send-full-drawing1", {
+                drawing: this.canvas.toJSON(),
+                id: data.id
+            });
         });
         socket.on("send-full-drawing", data => {
             socket.emit("send-full-drawing", data);
         });
 
         socket.on("full-drawing-return", data => {
-            console.log("Got drawing");
             if(data.drawing){
-                console.log("Got valid drawing");
                 this.canvas.loadFromJSON(data.drawing, this.canvas.renderAll.bind(this.canvas));
             }
         });

@@ -10,7 +10,10 @@ import socket from '../../socket';
 export default class RoomInfo extends Component{
     constructor(props){
         super(props);
-        this.state = {rooms: {}, search:""}
+        this.state = {
+            rooms: {},
+            search:""
+        }
     }
 
 
@@ -76,8 +79,7 @@ export default class RoomInfo extends Component{
     }
 
     handleChange = (event) => {
-        this.state.search = event.target.value;
-        this.setState(this.state);
+        this.setState({...this.state, search: event.target.value});
     };
 
     componentDidMount(){
@@ -85,14 +87,17 @@ export default class RoomInfo extends Component{
         socket.on("new-room",() => {
             socket.emit("get-rooms");
         });
+
         socket.on("del-room", data => {
-            delete this.state.rooms[data.room];
-            this.setState(this.state);
+            const rooms = this.state.rooms;
+            delete rooms[data.room];
+            this.setState({...this.state, rooms: rooms});
         });
+
         socket.on("get-rooms-return", data => {
-            this.state.rooms = data;
-            this.setState(this.state);
-        })
+            this.setState({...this.state, rooms: data});
+        });
+
     }
 
     render(){

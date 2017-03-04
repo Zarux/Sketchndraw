@@ -16,23 +16,22 @@ export default class Board extends Component {
     }
 
     handleSizeChange = (event, value) => {
-        this.state.penSize = value;
-        this.setState(this.state);
+        this.setState({...this.state, penSize: value});
     };
 
     handleColorChange = (color, event) => {
         this.state.color = color.hex;
-        this.setState(this.state);
+        this.setState({...this.state, color: color.hex});
     };
 
     handleClearCanvas = (event) => {
         this.state.clearCanvas = true;
-        this.setState(this.state);
+        this.setState({...this.state, clearCanvas: true});
     };
 
     handleOnClearedCanvas = (event) => {
         this.state.clearCanvas = false;
-        this.setState(this.state);
+        this.setState({...this.state, clearCanvas: false});
     };
 
     render(){
@@ -46,24 +45,23 @@ export default class Board extends Component {
             display: "inline-block"
         };
         return (
-            <Paper style={style} zDepth={3}>
 
-                <DrawArea
-                    color={this.state.color}
-                    penSize={this.state.penSize}
-                    clearCanvas={this.state.clearCanvas}
-                    onClearCanvas={this.handleOnClearedCanvas}
-                />
+                <Paper style={style} zDepth={3}>
+                    <DrawArea
+                        color={this.state.color}
+                        penSize={this.state.penSize}
+                        clearCanvas={this.state.clearCanvas}
+                        onClearCanvas={this.handleOnClearedCanvas}
+                    />
 
-                <Tools
-                    handleColorChange={this.handleColorChange}
-                    handleSizeChange={this.handleSizeChange}
-                    handleClearCanvas={this.handleClearCanvas}
-                    color={this.state.color}
-                    penSize={this.state.penSize}
-                />
-
-            </Paper>
+                    <Tools
+                        handleColorChange={this.handleColorChange}
+                        handleSizeChange={this.handleSizeChange}
+                        handleClearCanvas={this.handleClearCanvas}
+                        color={this.state.color}
+                        penSize={this.state.penSize}
+                    />
+                </Paper>
         )
     }
 }

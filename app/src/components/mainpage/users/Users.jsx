@@ -37,7 +37,6 @@ export default class Users extends Component {
     mapUsers(users){
         return Object.keys(users).map(id => {
             const user = users[id];
-            console.log(user);
             return <User key={id} name={user.name} drawing={user.drawing} points={user.points}/>
         })
     }
@@ -55,25 +54,23 @@ export default class Users extends Component {
 
         socket.emit("get-users", {room: this.props.room});
         socket.on("get-users-return", data =>{
-            console.log("1", data);
-            this.setState({users: data})
+            this.setState({...this.state, users: data})
         });
 
 
         socket.on("user-joined", data => {
-            console.log("2", data);
             const id = Object.keys(data)[0];
-            console.log("2.1", id);
+            const users = {...this.state.users, [id]:data[id]};
             this.state.users[id] = data[id];
-            this.setState({users: this.state.users});
+            this.setState({...this.state, users});
         });
 
 
         socket.on("user-left", data => {
-            console.log("3", data);
-            const id = data.id;
-            delete this.state.users[id];
-            this.setState({users: this.state.users});
+            const id = Object.keys(data)[0];
+            const users = this.state.users;
+            delete users[id];
+            this.setState({...this.state, users});
         });
 
     }

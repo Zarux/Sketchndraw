@@ -44,5 +44,10 @@ module.exports = {
                 NODE_ENV: JSON.stringify('development'),
             },
         }),
+        new webpack.optimize.UglifyJsPlugin({
+            compress: {
+                warnings: false
+            }
+        })
     ]
 };

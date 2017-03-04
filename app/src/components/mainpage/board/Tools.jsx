@@ -7,6 +7,7 @@ import Lens from 'material-ui/svg-icons/image/lens'
 import Delete from 'material-ui/svg-icons/action/delete'
 import ExpandMore from 'material-ui/svg-icons/navigation/expand-more'
 import ExpandLess from 'material-ui/svg-icons/navigation/expand-less'
+import Palette from 'material-ui/svg-icons/image/palette'
 import {CompactPicker} from 'react-color';
 
 export default class Tools extends Component{
@@ -19,16 +20,11 @@ export default class Tools extends Component{
         super(props);
         this.state = {
             showColor: false,
-            buttonIcon: (<ExpandMore style={this.buttonIconStyle}/>)
         }
     }
 
     handleClick = (event) => {
-        this.state.showColor = !this.state.showColor;
-        this.state.buttonIcon = this.state.showColor ?
-            (<ExpandLess style={this.buttonIconStyle} />)
-            : (<ExpandMore style={this.buttonIconStyle}/>);
-        this.setState(this.state);
+        this.setState({...this.state, showColor: !this.state.showColor});
     };
 
     render(){
@@ -49,7 +45,8 @@ export default class Tools extends Component{
                         </div>
                         ): ""}
                     <RaisedButton
-                        label={this.state.buttonIcon}
+                        style={{width:10}}
+                        label={<Palette style={this.buttonIconStyle}/>}
                         backgroundColor={this.props.color}
                         onClick={this.handleClick}
                     />

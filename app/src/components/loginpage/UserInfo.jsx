@@ -31,27 +31,30 @@ export default class UserInfo extends Component{
             return
         }
 
-        this.state.loading = true;
-        this.setState(this.state);
+        this.setState({...this.state, loading: true});
 
-        socket.emit("check-info",{room: this.state.room, name: this.state.name, pass: this.state.pass});
+        socket.emit("check-info",{
+            room: this.state.room,
+            name: this.state.name,
+            pass: this.state.pass
+        });
 
         socket.on("check-info-return", data => {
-            this.state.loading = false;
+            let pass = this.state.pass;
 
             sessionStorage.setItem('room', this.state.room);
             sessionStorage.setItem('name', this.state.name);
             sessionStorage.setItem('pass', this.state.pass);
 
             if(data.valid.name && data.valid.pass){
-                location.href = `/room/${this.state.room}`
+                location.href = `/room/${this.state.room}`;
             }else{
                 const error = {};
 
                 if(!data.valid.pass){
                     sessionStorage.setItem('pass', "");
                     error.pass = "Wrong password";
-                    this.state.pass = "";
+                    pass = "";
                 }
 
                 if(!data.valid.name){
@@ -61,7 +64,7 @@ export default class UserInfo extends Component{
 
                 sessionStorage.setItem("error", JSON.stringify(error));
             }
-            this.setState(this.state);
+            this.setState({...this.state, loading: false, pass: pass});
         });
     };
 
@@ -69,21 +72,21 @@ export default class UserInfo extends Component{
         const value = event.target.value;
         const name = event.target.name;
         if(value.length <= this.maxLen[name]) {
-            this.state[name] = value;
             sessionStorage[name] = value;
-            this.state.loading = false;
-            this.setState(this.state);
+            this.setState({...this.state, loading: false, [name]: value});
         }
     };
 
     componentDidMount(){
+        let room = this.state.room;
+        let name = this.state.name;
         if(sessionStorage.room !== undefined){
-            this.state.room = sessionStorage.room;
+            room = sessionStorage.room;
         }
         if(sessionStorage.name !== undefined){
-            this.state.name = sessionStorage.name;
+            name = sessionStorage.name;
         }
-        this.setState(this.state);
+        this.setState({...this.state, name: name, room: room});
     };
 
 
@@ -131,7 +134,7 @@ export default class UserInfo extends Component{
             })
         }
 
-        this.state.buttonDisabled = (this.state.room === "" || this.state.name === "");
+        const buttonDisabled = (this.state.room === "" || this.state.name === "");
 
         return (
             <Paper zDepth={3} style={style}>
@@ -177,7 +180,7 @@ export default class UserInfo extends Component{
                     />
                     <JoinButton
                         handleClick={this.handleClick}
-                        disabled={this.state.buttonDisabled}
+                        disabled={buttonDisabled}
                         loading={this.state.loading}
                     />
                 </div>

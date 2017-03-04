@@ -27,14 +27,15 @@ class ChatMessage extends Component{
 export default class Chat extends Component {
 
     mapMessages(msgs) {
-        return msgs.map((msg, i) => (<ChatMessage key={btoa(i+msg.user)} message={msg.message} user={msg.user} />))
+        return msgs.map((msg, i) => (<ChatMessage key={i} message={msg.message} user={msg.user} />))
     }
 
 
     constructor(props){
         super(props);
-        this.state = {};
-        this.state.messages = [];
+        this.state = {
+            messages: []
+        };
 
         socket.on("new-message", data => {
             this.addMessage(data);
@@ -43,14 +44,14 @@ export default class Chat extends Component {
 
 
     addMessage = (msg) => {
-        this.state.messages.push(msg);
-        this.setState({messages: this.state.messages})
+        const messages = {...this.state.messages, msg};
+        this.setState({...this.state, messages: messages});
     };
 
     componentDidMount() {
         socket.emit("full-chat", {room: this.props.room});
         socket.on("full-chat-return", data =>{
-            this.setState({messages: data})
+            this.setState({...this.state, data: data});
         });
     }
 
@@ -67,7 +68,7 @@ export default class Chat extends Component {
             height: "700px",
             width: style.width,
             display: style.display,
-            float: "right"
+           // float: "right"
         };
 
         return (

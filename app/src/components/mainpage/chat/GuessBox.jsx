@@ -35,26 +35,21 @@ export default class GuessBox extends Component{
 
 
     handleChange = (event) => {
-        this.setState({
-            value: event.target.value,
-        });
+        const value = event.target.value;
+        this.setState({...this.state, value: value});
     };
 
 
     handleKeyDown = (event) => {
         if(event.key === "Enter"){
-            //this.props.addMessage({user: this.props.user, message: this.state.value});
-            //socket.emit("new-message", {user: this.props.user, message: this.state.value});
-            //this.setState({value:""})
             this.addMessage()
         }
     };
 
 
     addMessage = () => {
-        this.setState({value:""});
+        this.setState({...this.state, value:""});
         socket.emit("new-message", {room: this.props.room, user: this.props.user, message: this.state.value});
-        //this.props.addMessage(msg)
     };
 
 

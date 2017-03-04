@@ -89,9 +89,10 @@ io.sockets.on('connection', function (socket) {
         };
 
         if(new_room){
-            io.sockets.adapter.rooms[data.room].custom = {};
-            io.sockets.adapter.rooms[data.room].custom.locked = false;
-            io.sockets.adapter.rooms[data.room].custom.users = [data.user];
+            io.sockets.adapter.rooms[data.room].custom = {
+                locked: false,
+                users: [data.user]
+            };
             if(data.pass){
                 io.sockets.adapter.rooms[data.room].custom.locked = true;
                 io.sockets.adapter.rooms[data.room].custom.password = data.pass;
