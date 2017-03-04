@@ -102,7 +102,7 @@ export default class RoomInfo extends Component{
             textAlign: "center",
             display: "inline-block",
             marginTop:"10%",
-            overflowY:"scroll",
+            overflowY:"auto",
             overflowX:"hidden",
             maxHeight:"350px",
             minHeight:"200px"

@@ -103,7 +103,7 @@ export default class Users extends Component {
                             }
                     }
                 />
-                <h2 style={{textAlign:"center"}}>Users</h2>
+                <h2 style={{textAlign:"center"}}>Players</h2>
                 <List children={this.mapUsers(this.state.users)} />
             </Paper>
         )

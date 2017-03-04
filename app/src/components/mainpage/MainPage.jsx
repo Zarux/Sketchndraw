@@ -34,7 +34,7 @@ export default class MainPage extends Component {
                 this.state.shouldRender = true;
                 this.setState(this.state);
             });
-            //sessionStorage.clear();
+            sessionStorage.clear();
         }
     }
 
