@@ -44,7 +44,7 @@ export default class Chat extends Component {
 
 
     addMessage = (msg) => {
-        const messages = {...this.state.messages, msg};
+        const messages = [...this.state.messages, msg];
         this.setState({...this.state, messages: messages});
     };
 

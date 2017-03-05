@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import {Grid, Row, Col} from 'react-flexbox-grid'
 import Chat from './chat/Chat';
 import Users from "./users/Users";
 import Board from './board/Board';
@@ -15,7 +14,10 @@ export default class MainPage extends Component {
         this.state = {
             room: this.props.match.params.room.substr(0,6),
             shouldRender: false,
-            user: username
+            user: username,
+            words: [],
+            isGame: false,
+            isDrawer: false
         };
 
         if(!username){
@@ -42,6 +44,22 @@ export default class MainPage extends Component {
                 this.setState({...this.state, shouldRender: true});
             });
 
+            socket.on("new-round-drawer", data => {
+                const words = data.words;
+                this.setState({
+                    ...this.state,
+                    words: words,
+                    isGame: true,
+                    isDrawer: true,
+                    drawer: data.drawer
+                });
+            });
+
+            socket.on("new-round", data => {
+                console.log(data);
+                this.setState({...this.state, drawer: data.drawer})
+            })
+
             //sessionStorage.clear();
         }
     }
@@ -56,16 +74,19 @@ export default class MainPage extends Component {
         const style = {
             marginRight:"15%",
             marginLeft:"15%",
-            marginTop:"3%"
+            marginTop:"3%",
+            display:"flex",
+            flexDirection:"row",
+            justifyContent: "space-around"
         };
         if(!this.state.shouldRender){
             return (<div></div>)
         }
         return (
             <div style={style}>
-                <Users user={this.state.user} room={this.state.room}/>
-                <Board />
-                <Chat user={this.state.user} room={this.state.room}/>
+                <Users user={this.state.user} room={this.state.room} round={-1} drawer={this.state.drawer} />
+                <Board round={-1} words={this.state.words} isGame={this.state.isGame} isDrawer={this.state.isDrawer}/>
+                <Chat user={this.state.user} room={this.state.room} round={-1}/>
             </div>
         );
     }

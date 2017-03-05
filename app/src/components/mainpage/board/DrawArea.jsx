@@ -6,18 +6,34 @@ export default class DrawArea extends Component{
     canvas = null;
     drawingMode = false;
     remoteDrawing = false;
-    isDrawer = false;
     pointer = null;
     sendMouseMove = true;
 
     constructor(props){
         super(props);
         this.state = {};
-        this.isDrawer = this.props.isDrawer;
     }
 
+    disableDrawing = () => {
+        this.canvas.isDrawingMode = false;
+        this.canvas.freeDrawingBrush._reset();
+        this.canvas.removeListeners();
+    };
+
+    enableDrawing = () =>{
+        this.canvas.isDrawingMode = true;
+        this.canvas.removeListeners();
+        this.canvas._initEventListeners();
+        this.canvas.on('mouse:move', this.handleMouseMove);
+        this.canvas.on('mouse:down', this.handleMouseDown);
+        this.canvas.on('mouse:up', this.handleMouseUp);
+        this.canvas.on('mouse:leave', this.handleMouseLeave);
+        this.canvas.freeDrawingBrush.color = this.props.color;
+        this.canvas.freeDrawingBrush.width = this.props.penSize;
+    };
+
     handleMouseDown = (event) => {
-        if(this.isDrawer){
+        if(this.props.isDrawer){
             this.drawingMode = true;
             this.pointer = this.canvas.getPointer(event.e);
             socket.emit("mouse-down", {
@@ -29,14 +45,14 @@ export default class DrawArea extends Component{
     };
 
     handleMouseUp = (event) => {
-        if(this.isDrawer){
+        if(this.props.isDrawer){
             this.drawingMode = false;
             socket.emit("mouse-up", this.pointer);
         }
     };
 
     handleMouseLeave = (event) => {
-        if(this.isDrawer){
+        if(this.props.isDrawer){
             this.drawingMode = false;
         }
     };
@@ -47,7 +63,6 @@ export default class DrawArea extends Component{
         }
         if(!this.sendMouseMove){
             this.sendMouseMove = true;
-            console.log("dont send this one")
             return;
         }
         this.pointer = this.canvas.getPointer(event.e);
@@ -60,22 +75,17 @@ export default class DrawArea extends Component{
     };
 
     componentDidMount(){
+
         this.canvas = new fabric.Canvas('paper', {
             isDrawingMode: true,
             selection: false,
             height: this.paper.parentNode.offsetHeight * 0.8,
             width: this.paper.parentNode.offsetWidth * 0.9,
         });
-        this.canvas.on('mouse:move', this.handleMouseMove);
-        this.canvas.on('mouse:down', this.handleMouseDown);
-        this.canvas.on('mouse:up', this.handleMouseUp);
-        this.canvas.on('mouse:leave', this.handleMouseLeave);
 
         this.canvas.freeDrawingBrush = new fabric.PencilBrush(this.canvas);
-        this.canvas.freeDrawingBrush.color = this.props.color;
-        this.canvas.freeDrawingBrush.width = this.props.penSize;
         this.canvas.remotePen = new fabric.PencilBrush(this.canvas);
-
+        this.disableDrawing();
         socket.on("mouse-move-return", data => {
             this.canvas.remotePen.color = data.color;
             this.canvas.remotePen.width = data.width;
@@ -110,6 +120,7 @@ export default class DrawArea extends Component{
                 id: data.id
             });
         });
+
         socket.on("send-full-drawing", data => {
             socket.emit("send-full-drawing", data);
         });
@@ -122,9 +133,16 @@ export default class DrawArea extends Component{
     }
 
     componentDidUpdate(){
+
         if(this.props.clearCanvas){
-            this.canvas.clear()
+            this.canvas.clear();
             this.props.onClearCanvas()
+        }
+
+        if(this.props.isDrawer){
+            this.enableDrawing();
+        }else{
+            this.disableDrawing();
         }
     }
 

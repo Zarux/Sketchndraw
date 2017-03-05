@@ -3,11 +3,50 @@ import {List, ListItem} from 'material-ui/List';
 import Edit from 'material-ui/svg-icons/image/edit';
 import Visibility from 'material-ui/svg-icons/action/visibility'
 import FlatButton from 'material-ui/FlatButton';
+import RaisedButton from 'material-ui/RaisedButton';
+import CircularProgress from 'material-ui/CircularProgress';
 import Paper from 'material-ui/Paper';
 import socket from '../../../socket'
 
-class User extends Component {
+class GameStarter extends Component {
+    constructor(props){
+        super(props);
+    }
 
+    handleClick = (event) => {
+      socket.emit("start-game");
+    };
+
+    render(){
+        return (
+            <RaisedButton
+                label="Start game"
+                style={{
+                    height:100,
+                }}
+                onClick={this.handleClick}
+            />
+        )
+    }
+}
+
+class Timer extends Component {
+    constructor(props){
+        super(props);
+        this.state = {
+            seconds: 0
+        };
+    }
+
+    render(){
+        return (
+            <span>pleh</span>
+        )
+    }
+}
+
+
+class User extends Component {
 
     constructor(props){
         super(props);
@@ -37,6 +76,9 @@ export default class Users extends Component {
     mapUsers(users){
         return Object.keys(users).map(id => {
             const user = users[id];
+            if(id === this.props.drawer){
+                user.drawing = true;
+            }
             return <User key={id} name={user.name} drawing={user.drawing} points={user.points}/>
         })
     }
@@ -67,7 +109,7 @@ export default class Users extends Component {
 
 
         socket.on("user-left", data => {
-            const id = Object.keys(data)[0];
+            const id = data.id;
             const users = this.state.users;
             delete users[id];
             this.setState({...this.state, users});
@@ -79,29 +121,42 @@ export default class Users extends Component {
         const style = {
             float:"left",
             height:"700px",
-            width:"200px"
+            width:"200px",
+            display:"flex",
+            flexDirection:"column",
+            justifyContent:"space-between"
         };
 
         return (
             <Paper style={style} zDepth={3}>
-                <FlatButton
-                    style={{
-                        width: "80%",
-                        marginLeft:"10%",
-                        marginRight:"10%"
-                    }}
-                    backgroundColor="#ff8080"
-                    hoverColor="#ff9999"
-                    label={<span style={{color:"black"}}>LEAVE</span>}
-                    onClick={
-                            ()=>{
-                                delete sessionStorage.room;
-                                location.href = '/'
-                            }
-                    }
-                />
-                <h2 style={{textAlign:"center"}}>Players</h2>
-                <List children={this.mapUsers(this.state.users)} />
+                <div>
+                    <FlatButton
+                        style={{
+                            width: "80%",
+                            marginLeft:"10%",
+                            marginRight:"10%"
+                        }}
+                        backgroundColor="#ff8080"
+                        hoverColor="#ff9999"
+                        label={<span style={{color:"black"}}>LEAVE</span>}
+                        onClick={
+                                ()=>{
+                                    delete sessionStorage.room;
+                                    location.href = '/'
+                                }
+                        }
+                    />
+                    <h2 style={{textAlign:"center"}}>Players</h2>
+                    <List
+                        style={{
+                            maxHeight:450,
+                            overflowY:"auto"
+                        }}
+                        children={this.mapUsers(this.state.users)}
+                    />
+                </div>
+                {this.props.round === -1 ? <GameStarter /> : <Timer />}
+
             </Paper>
         )
     }

@@ -6,10 +6,22 @@ const server = require('http').Server(app);
 const io = require('socket.io').listen(server);
 const redis = require("redis");
 const config = require("./config");
+const words = require("./words").words;
 const client = redis.createClient({
     host: config.redisHost,
     password: config.redisPassword
 });
+
+const logColors = {
+    FgBlack: "\x1b[30m",
+    FgRed:"\x1b[31m",
+    FgGreen: "\x1b[32m",
+    FgYellow: "\x1b[33m",
+    FgBlue: "\x1b[34m",
+    FgMagenta: "\x1b[35m",
+    FgCyan: "\x1b[36m",
+    FgWhite: "\x1b[37m",
+};
 
 client.flushall();
 
@@ -21,7 +33,10 @@ io.sockets.on('connection', function (socket) {
             const clients = io.sockets.adapter.rooms[room].sockets;
             const num_clients = Object.keys(clients).length - 1;
             if(room.length !== 20) {
-                console.log(socket.nickname, "disconnecting from", room, "\n");
+                logMessage(
+                    logColors.FgBlue, socket.nickname,
+                    logColors.FgRed, "left   room",
+                    logColors.FgYellow, room);
             }
 
             socket.broadcast.to(room).emit('user-left', {
@@ -30,7 +45,7 @@ io.sockets.on('connection', function (socket) {
 
             if(num_clients === 0){
                 if(room.length !== 20) {
-                    console.log('Clearing data for room', room, "\n");
+                    logMessage(logColors.FgRed, 'Clearing data for room', logColors.FgYellow, room);
                 }
                 socket.broadcast.emit("del-room", {room:room});
                 client.del(`sk:room:${room}:chat`);
@@ -91,13 +106,13 @@ io.sockets.on('connection', function (socket) {
         if(new_room){
             io.sockets.adapter.rooms[data.room].custom = {
                 locked: false,
-                users: [data.user]
+                users: [],
+                drawer: ""
             };
             if(data.pass){
                 io.sockets.adapter.rooms[data.room].custom.locked = true;
                 io.sockets.adapter.rooms[data.room].custom.password = data.pass;
             }
-            userData.drawing = true;
             io.sockets.adapter.rooms[data.room].custom.drawer = socket.id;
         }else{
             if(io.sockets.adapter.rooms[data.room].custom.locked){
@@ -108,8 +123,8 @@ io.sockets.on('connection', function (socket) {
                 }
             }
         }
-        io.sockets.adapter.rooms[data.room].custom.users.push(data.user);
-        console.log(data.user, "joined room", data.room, "\n");
+        io.sockets.adapter.rooms[data.room].custom.users.push(socket.id);
+        logMessage(logColors.FgBlue, data.user, logColors.FgGreen, "joined room", logColors.FgYellow, data.room);
         socket.user = userData;
         socket.mainRoom = data.room;
         const ret_data = {};
@@ -142,7 +157,7 @@ io.sockets.on('connection', function (socket) {
     socket.on("request-full-drawing", data => {
         const room = socket.mainRoom;
         const drawer = io.sockets.adapter.rooms[room].custom.drawer;
-        if(drawer) {
+        if(io.sockets.connected[drawer]) {
             io.sockets.connected[drawer].emit('request-full-drawing', {id: socket.id});
         }
     });
@@ -181,23 +196,72 @@ io.sockets.on('connection', function (socket) {
 
     socket.on("mouse-move", data => {
         const room = socket.mainRoom;
-        socket.broadcast.to(room).emit('mouse-move-return', data);
+        if(socket.user.drawing) {
+            socket.broadcast.to(room).emit('mouse-move-return', data);
+        }
     });
 
     socket.on("mouse-up", data => {
         const room = socket.mainRoom;
-        socket.broadcast.to(room).emit('mouse-up-return', data);
+        if(socket.user.drawing) {
+            socket.broadcast.to(room).emit('mouse-up-return', data);
+        }
     });
 
     socket.on("mouse-down", data => {
         const room = socket.mainRoom;
-        socket.broadcast.to(room).emit('mouse-down-return', data);
+        if(socket.user.drawing) {
+            socket.broadcast.to(room).emit('mouse-down-return', data);
+        }
     });
 
+    socket.on("clear-canvas", data =>{
+        if(socket.user.drawing){
+            socket.broadcast.to(socket.mainRoom).emit("clear-canvas");
+        }
+    });
+
+    socket.on("start-game", data =>{
+        const room = io.sockets.adapter.rooms[socket.mainRoom];
+        room.custom.drawer = room.custom.users[0];
+        const drawer = room.custom.drawer;
+        io.sockets.connected[drawer].user.drawing = true;
+        const ret_data = {
+            words: getNWords(3),
+            drawer: drawer
+        };
+        io.sockets.connected[drawer].emit("new-round-drawer", ret_data);
+        io.to(socket.mainRoom).emit("new-round", {drawer: drawer});
+    });
 
 });
 
+const getNWords = (n) => {
+    const not = [];
+    const ret_words = [];
+    for(let i=0; i<n; i++){
+        const word1 = getRandomInt(0, words.length, not);
+        not.push(word1);
+        ret_words.push(words[word1])
+    }
+    return ret_words;
+};
+
+const getRandomInt = (min, max, not=[]) => {
+    const i = Math.floor(Math.random() * (max - min + 1)) + min;
+    if(not.indexOf(i) === -1){
+        return i;
+    }
+    return getRandomInt(min, max, not);
+};
+
+const logMessage = (...msg) => {
+    const message = msg.join(" ");
+    const date = new Date().toLocaleString();
+    console.log(logColors.FgWhite, `[${date}] : ${message}`);
+};
 
 server.listen(config.serverPort, ()=>{
-    console.log("Server running on", config.serverPort)
+    logMessage("Server running on", config.serverPort)
 });
+
