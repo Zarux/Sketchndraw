@@ -4,7 +4,7 @@ import Edit from 'material-ui/svg-icons/image/edit';
 import Visibility from 'material-ui/svg-icons/action/visibility'
 import FlatButton from 'material-ui/FlatButton';
 import RaisedButton from 'material-ui/RaisedButton';
-import CircularProgress from 'material-ui/CircularProgress';
+import ReactCountdownClock from 'react-countdown-clock';
 import Paper from 'material-ui/Paper';
 import socket from '../../../socket'
 
@@ -34,13 +34,30 @@ class Timer extends Component {
     constructor(props){
         super(props);
         this.state = {
-            seconds: 0
+            seconds: 60,
+            isOn: false
         };
+    }
+
+
+    componentDidUpdate(){
+
     }
 
     render(){
         return (
-            <span>pleh</span>
+            <div
+            style={{
+                height: 100,
+                paddingLeft:"20%"
+            }}
+            >
+            <ReactCountdownClock seconds={this.props.timer}
+                                 color="#000"
+                                 alpha={0.9}
+                                 size={80}
+            />
+            </div>
         )
     }
 }
@@ -155,7 +172,7 @@ export default class Users extends Component {
                         children={this.mapUsers(this.state.users)}
                     />
                 </div>
-                {this.props.round === -1 ? <GameStarter /> : <Timer />}
+                {this.props.round === -1 ? <GameStarter /> : <Timer timer={this.props.timer} />}
 
             </Paper>
         )

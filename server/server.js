@@ -34,7 +34,7 @@ io.sockets.on('connection', function (socket) {
             const num_clients = Object.keys(clients).length - 1;
             if(room.length !== 20) {
                 logMessage(
-                    logColors.FgBlue, socket.nickname,
+                    logColors.FgCyan, socket.nickname,
                     logColors.FgRed, "left   room",
                     logColors.FgYellow, room);
             }
@@ -45,7 +45,7 @@ io.sockets.on('connection', function (socket) {
 
             if(num_clients === 0){
                 if(room.length !== 20) {
-                    logMessage(logColors.FgRed, 'Clearing data for room', logColors.FgYellow, room);
+                    logMessage(logColors.FgRed, 'Clearing room', logColors.FgYellow, room);
                 }
                 socket.broadcast.emit("del-room", {room:room});
                 client.del(`sk:room:${room}:chat`);
@@ -107,7 +107,10 @@ io.sockets.on('connection', function (socket) {
             io.sockets.adapter.rooms[data.room].custom = {
                 locked: false,
                 users: [],
-                drawer: ""
+                drawer: "",
+                round: -1,
+                timer: 60,
+                drawerIndex: 0
             };
             if(data.pass){
                 io.sockets.adapter.rooms[data.room].custom.locked = true;
@@ -124,7 +127,7 @@ io.sockets.on('connection', function (socket) {
             }
         }
         io.sockets.adapter.rooms[data.room].custom.users.push(socket.id);
-        logMessage(logColors.FgBlue, data.user, logColors.FgGreen, "joined room", logColors.FgYellow, data.room);
+        logMessage(logColors.FgCyan, data.user, logColors.FgGreen, "joined room", logColors.FgYellow, data.room);
         socket.user = userData;
         socket.mainRoom = data.room;
         const ret_data = {};
@@ -134,7 +137,12 @@ io.sockets.on('connection', function (socket) {
             points: 0
         };
         socket.broadcast.to(data.room).emit('user-joined', ret_data);
-        socket.emit("join-room-success",{ok: "ok"});
+        socket.emit("join-room-success",{
+            ok: "ok",
+            ongoing: io.sockets.adapter.rooms[data.room].custom.ongoing,
+            round: io.sockets.adapter.rooms[data.room].custom.round,
+            timer:  io.sockets.adapter.rooms[data.room].custom.timer
+        });
     });
 
 
@@ -224,6 +232,9 @@ io.sockets.on('connection', function (socket) {
     socket.on("start-game", data =>{
         const room = io.sockets.adapter.rooms[socket.mainRoom];
         room.custom.drawer = room.custom.users[0];
+        room.custom.ongoing = true;
+        room.custom.round = 0;
+        room.custom.timer = 60;
         const drawer = room.custom.drawer;
         io.sockets.connected[drawer].user.drawing = true;
         const ret_data = {
@@ -232,9 +243,49 @@ io.sockets.on('connection', function (socket) {
         };
         io.sockets.connected[drawer].emit("new-round-drawer", ret_data);
         io.to(socket.mainRoom).emit("new-round", {drawer: drawer});
+        room.custom.timerGoing = false;
+        doTimer(room);
     });
 
+    socket.on("start-new-round", data =>{
+        const room = io.sockets.adapter.rooms[socket.mainRoom];
+        room.custom.drawer = room.custom.users[room.custom.drawerIndex];
+        room.custom.round = room.custom.round + 1;
+        room.custom.timer = 60;
+        const drawer = room.custom.drawer;
+        io.sockets.connected[drawer].user.drawing = true;
+        const ret_data = {
+            words: getNWords(3),
+            drawer: drawer
+        };
+        io.sockets.connected[drawer].emit("new-round-drawer", ret_data);
+        io.to(socket.mainRoom).emit("new-round", {drawer: drawer});
+        room.custom.timerGoing = false;
+        doTimer(room);
+    });
+
+    socket.on("select-word", data => {
+        const room = io.sockets.adapter.rooms[socket.mainRoom];
+        room.custom.word = data.word;
+    })
+
 });
+
+const doTimer = room => {
+    if(room.custom.timerGoing){
+        return
+    }
+    let seconds = room.custom.timer;
+    room.custom.timerGoing = true;
+    const timer = setInterval(()=>{
+        if(seconds === 0){
+            clearInterval(timer);
+        }else{
+            room.custom.timer = seconds;
+        }
+        seconds = seconds - 1;
+    }, 1000);
+};
 
 const getNWords = (n) => {
     const not = [];

@@ -10,8 +10,9 @@ export default class LoginPage extends Component {
 
     render(){
         return(
-            <div style={{textAlign:"center", display:"inline-block", marginLeft:"40%", marginTop:"4%", width:"20%"}}>
+            <div style={{textAlign:"center", display:"inline-block", marginLeft:"40%", marginTop:"1%", width:"20%"}}>
                 <PageInfo />
+                <br />
                 <UserInfo />
                 <RoomInfo />
             </div>

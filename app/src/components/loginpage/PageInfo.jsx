@@ -9,7 +9,7 @@ export default class PageInfo extends Component{
     render(){
         return (
             <div>
-                <h1 style={{color:"orange"}}>LOGO</h1>
+                <img src="/logo.svg" />
             </div>
         )
     }
