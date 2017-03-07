@@ -4,6 +4,7 @@ import WordPicker from './WordPicker'
 import DrawArea from './DrawArea'
 import Paper from 'material-ui/Paper';
 import Tools from './Tools'
+import store from '../../../store'
 
 export default class Board extends Component {
 
@@ -72,6 +73,7 @@ export default class Board extends Component {
                         color={this.state.color}
                         penSize={this.state.penSize}
                         clearCanvas={this.state.clearCanvas}
+                        handleClearCanvas={this.handleClearCanvas}
                         onClearCanvas={this.handleOnClearedCanvas}
                         isDrawer={this.props.isDrawer}
                     />

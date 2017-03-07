@@ -23,6 +23,8 @@ const logColors = {
     FgWhite: "\x1b[37m",
 };
 
+const ROUND_TIME = 60;
+
 client.flushall();
 
 io.sockets.on('connection', function (socket) {
@@ -70,7 +72,7 @@ io.sockets.on('connection', function (socket) {
             valid.pass = false;
         }
 
-        valid.name = io.sockets.adapter.rooms[data.room].custom.users.indexOf(data.name) === -1;
+        valid.name = io.sockets.adapter.rooms[data.room].custom.usernames.indexOf(data.name) === -1;
         socket.emit("check-info-return", {valid: valid});
 
     });
@@ -109,8 +111,10 @@ io.sockets.on('connection', function (socket) {
                 users: [],
                 drawer: "",
                 round: -1,
-                timer: 60,
-                drawerIndex: 0
+                timer: ROUND_TIME,
+                drawerIndex: -1,
+                usernames: [],
+                ongoing: false
             };
             if(data.pass){
                 io.sockets.adapter.rooms[data.room].custom.locked = true;
@@ -127,6 +131,7 @@ io.sockets.on('connection', function (socket) {
             }
         }
         io.sockets.adapter.rooms[data.room].custom.users.push(socket.id);
+        io.sockets.adapter.rooms[data.room].custom.usernames.push(data.user);
         logMessage(logColors.FgCyan, data.user, logColors.FgGreen, "joined room", logColors.FgYellow, data.room);
         socket.user = userData;
         socket.mainRoom = data.room;
@@ -138,7 +143,7 @@ io.sockets.on('connection', function (socket) {
         };
         socket.broadcast.to(data.room).emit('user-joined', ret_data);
         socket.emit("join-room-success",{
-            ok: "ok",
+            id: socket.id,
             ongoing: io.sockets.adapter.rooms[data.room].custom.ongoing,
             round: io.sockets.adapter.rooms[data.room].custom.round,
             timer:  io.sockets.adapter.rooms[data.room].custom.timer
@@ -229,39 +234,27 @@ io.sockets.on('connection', function (socket) {
         }
     });
 
-    socket.on("start-game", data =>{
-        const room = io.sockets.adapter.rooms[socket.mainRoom];
-        room.custom.drawer = room.custom.users[0];
-        room.custom.ongoing = true;
-        room.custom.round = 0;
-        room.custom.timer = 60;
-        const drawer = room.custom.drawer;
-        io.sockets.connected[drawer].user.drawing = true;
-        const ret_data = {
-            words: getNWords(3),
-            drawer: drawer
-        };
-        io.sockets.connected[drawer].emit("new-round-drawer", ret_data);
-        io.to(socket.mainRoom).emit("new-round", {drawer: drawer});
-        room.custom.timerGoing = false;
-        doTimer(room);
-    });
-
     socket.on("start-new-round", data =>{
         const room = io.sockets.adapter.rooms[socket.mainRoom];
-        room.custom.drawer = room.custom.users[room.custom.drawerIndex];
+        if((data && data.newGame) || room.custom.drawer === socket.id){
+            socket.user.drawing = false;
+        }else{
+            return
+        }
+
+        room.custom.drawerIndex = room.custom.drawerIndex + 1;
+        if(room.custom.drawerIndex === room.custom.users.length){
+            room.custom.drawerIndex = 0;
+        }
         room.custom.round = room.custom.round + 1;
-        room.custom.timer = 60;
+        room.custom.drawer = room.custom.users[room.custom.drawerIndex];
+
+        room.custom.timer = ROUND_TIME;
         const drawer = room.custom.drawer;
         io.sockets.connected[drawer].user.drawing = true;
-        const ret_data = {
-            words: getNWords(3),
-            drawer: drawer
-        };
-        io.sockets.connected[drawer].emit("new-round-drawer", ret_data);
         io.to(socket.mainRoom).emit("new-round", {drawer: drawer});
-        room.custom.timerGoing = false;
-        doTimer(room);
+        //room.custom.timerGoing = false;
+        //doTimer(room);
     });
 
     socket.on("select-word", data => {
@@ -278,6 +271,7 @@ const doTimer = room => {
     let seconds = room.custom.timer;
     room.custom.timerGoing = true;
     const timer = setInterval(()=>{
+        console.log(seconds);
         if(seconds === 0){
             clearInterval(timer);
         }else{

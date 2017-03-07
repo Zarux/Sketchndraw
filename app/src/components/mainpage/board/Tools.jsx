@@ -9,6 +9,7 @@ import ExpandMore from 'material-ui/svg-icons/navigation/expand-more'
 import ExpandLess from 'material-ui/svg-icons/navigation/expand-less'
 import Palette from 'material-ui/svg-icons/image/palette'
 import {CompactPicker} from 'react-color';
+import store from '../../../store'
 
 export default class Tools extends Component{
     buttonIconStyle = {
@@ -36,6 +37,7 @@ export default class Tools extends Component{
             height: "15%",
             backgroundColor: "rgba(0,0,0,0)"
         };
+        const isDrawer = store.getState().drawer.isDrawing;
         return (
             <Toolbar style={style}>
                 <ToolbarGroup firstChild={true}>
@@ -45,7 +47,7 @@ export default class Tools extends Component{
                         </div>
                         ): ""}
                     <RaisedButton
-                        disabled={!this.props.isDrawer}
+                        disabled={!isDrawer}
                         style={{width:10}}
                         label={<Palette style={this.buttonIconStyle}/>}
                         backgroundColor={this.props.color}
@@ -53,7 +55,7 @@ export default class Tools extends Component{
                     />
                     <ToolbarSeparator />
                     <Slider
-                        disabled={!this.props.isDrawer}
+                        disabled={!isDrawer}
                         defaultValue={this.props.penSize}
                         value={this.props.penSize}
                         min={3}
@@ -64,7 +66,7 @@ export default class Tools extends Component{
                     />
                     <ToolbarSeparator />
                     <RaisedButton
-                        disabled={!this.props.isDrawer}
+                        disabled={!isDrawer}
                         label={<Delete style={{paddingTop:5, color:"#747474"}} />}
                         onClick={this.props.handleClearCanvas}
                     />

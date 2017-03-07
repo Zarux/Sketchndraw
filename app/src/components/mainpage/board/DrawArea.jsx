@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import socket from '../../../socket'
+import store from '../../../store'
 
 export default class DrawArea extends Component{
 
@@ -8,6 +9,7 @@ export default class DrawArea extends Component{
     remoteDrawing = false;
     pointer = null;
     sendMouseMove = true;
+    isDrawing = false;
 
     constructor(props){
         super(props);
@@ -33,7 +35,7 @@ export default class DrawArea extends Component{
     };
 
     handleMouseDown = (event) => {
-        if(this.props.isDrawer){
+        if(this.isDrawing){
             this.drawingMode = true;
             this.pointer = this.canvas.getPointer(event.e);
             socket.emit("mouse-down", {
@@ -45,14 +47,14 @@ export default class DrawArea extends Component{
     };
 
     handleMouseUp = (event) => {
-        if(this.props.isDrawer){
+        if(this.isDrawing){
             this.drawingMode = false;
             socket.emit("mouse-up", this.pointer);
         }
     };
 
     handleMouseLeave = (event) => {
-        if(this.props.isDrawer){
+        if(this.isDrawing){
             this.drawingMode = false;
         }
     };
@@ -75,7 +77,7 @@ export default class DrawArea extends Component{
     };
 
     componentDidMount(){
-
+        this.isDrawing = store.getState().drawer.isDrawing;
         this.canvas = new fabric.Canvas('paper', {
             isDrawingMode: true,
             selection: false,
@@ -133,13 +135,12 @@ export default class DrawArea extends Component{
     }
 
     componentDidUpdate(){
-
+        this.isDrawing = store.getState().drawer.isDrawing;
         if(this.props.clearCanvas){
             this.canvas.clear();
             this.props.onClearCanvas()
         }
-
-        if(this.props.isDrawer){
+        if(this.isDrawing){
             this.enableDrawing();
         }else{
             this.disableDrawing();

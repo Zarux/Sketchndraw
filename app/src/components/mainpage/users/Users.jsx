@@ -7,6 +7,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import ReactCountdownClock from 'react-countdown-clock';
 import Paper from 'material-ui/Paper';
 import socket from '../../../socket'
+import store from '../../../store'
 
 class GameStarter extends Component {
     constructor(props){
@@ -14,7 +15,7 @@ class GameStarter extends Component {
     }
 
     handleClick = (event) => {
-      socket.emit("start-game");
+      socket.emit("start-new-round", {newGame:true});
     };
 
     render(){
@@ -33,18 +34,32 @@ class GameStarter extends Component {
 class Timer extends Component {
     constructor(props){
         super(props);
-        this.state = {
-            seconds: 60,
-            isOn: false
-        };
+        this.state =  {
+            reload: false,
+            seconds: parseInt(this.props.timer)
+        }
     }
 
 
     componentDidUpdate(){
+        if(this.state.reload){
+            this.setState({...this.state, reload:false})
+        }
 
     }
 
+    handleComplete = () =>{
+        if(store.getState().drawer.isDrawing){
+            socket.emit("start-new-round");
+            console.log("STARTING NEW ROUND", Date.now());
+        }
+        this.setState({...this.state, reload:true, seconds: 60})
+    };
+
     render(){
+        if(this.state.reload){
+            return (<div></div>)
+        }
         return (
             <div
             style={{
@@ -52,10 +67,11 @@ class Timer extends Component {
                 paddingLeft:"20%"
             }}
             >
-            <ReactCountdownClock seconds={this.props.timer}
+            <ReactCountdownClock seconds={this.state.seconds}
                                  color="#000"
                                  alpha={0.9}
                                  size={80}
+                                 onComplete={this.handleComplete}
             />
             </div>
         )
@@ -93,9 +109,7 @@ export default class Users extends Component {
     mapUsers(users){
         return Object.keys(users).map(id => {
             const user = users[id];
-            if(id === this.props.drawer){
-                user.drawing = true;
-            }
+            user.drawing = id === store.getState().drawer.drawerId;
             return <User key={id} name={user.name} drawing={user.drawing} points={user.points}/>
         })
     }
@@ -172,7 +186,12 @@ export default class Users extends Component {
                         children={this.mapUsers(this.state.users)}
                     />
                 </div>
-                {this.props.round === -1 ? <GameStarter /> : <Timer timer={this.props.timer} />}
+                {this.props.round === -1 ?
+                    <GameStarter /> :
+                    <Timer
+                        timer={this.props.timer}
+                    />
+                }
 
             </Paper>
         )
