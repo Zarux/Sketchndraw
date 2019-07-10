@@ -18,7 +18,7 @@
     "react-toolbox-themr": "^1.0.2",
     "redux-logger": "2.8.1",
     "webpack": "^2.2.1",
-    "webpack-dev-server": "^2.3.0"
+    "webpack-dev-server": "^3.1.11"
   },
   "dependencies": {
     "classnames": "^2.2.5",
